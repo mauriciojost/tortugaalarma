@@ -92,7 +92,7 @@ struct complex *cx;
 				ct.im = imul(cw, cx[i+k]);
 				cx[i+k].re = cx[i].re - ct.re;/*          cx[i+k] = cx[i] -   ct        */
 				cx[i+k].im = cx[i].im - ct.im;
-				cx[i].re = cx[i].re + ct.re;
+				cx[i].re = cx[i].re + ct.re;  /*           cx[i]  = cx[i] +   ct        */
 				cx[i].im = cx[i].im + ct.im;
 			}
 		}
