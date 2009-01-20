@@ -9,8 +9,9 @@ struct complex
 };
 
 float rnd();
-void cargar_vector(struct complex vector[], int n, float fs, float f);
-void imprimir_vector(struct complex vector[], int n);
+void cargar_vector_complejo(struct complex vector[], int n, float fs, float f);
+void imprimir_vector_complejo(struct complex vector[], int n);
+void imprimir_maximo_modulo(struct complex vector[], int n, float fs);
 
 #endif
 

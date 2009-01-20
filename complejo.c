@@ -7,7 +7,7 @@ float rnd(){
   return (((float)rand())/RAND_MAX);
 }
 
-void cargar_vector(struct complex vector[], int n, float fs, float f){
+void cargar_vector_complejo(struct complex vector[], int n, float fs, float f){
   int i=0;
   for(i=0;i<n;i++){
     vector[i].re = sin(2*PI*(f/fs)*i);
@@ -16,7 +16,7 @@ void cargar_vector(struct complex vector[], int n, float fs, float f){
   printf("Vector generado (f_sample=%fHz): f=%fHz\n",fs,f);
 }
 
-void imprimir_vector(struct complex vector[], int n){
+void imprimir_vector_complejo(struct complex vector[], int n){
   int i;
   printf("Vector: \n");
   for(i=0;i<n;i++){
@@ -24,4 +24,35 @@ void imprimir_vector(struct complex vector[], int n){
   }  
   printf("Fin vector.\n");
 }
+
+
+
+
+
+
+void imprimir_maximo_modulo(struct complex vector[], int n, float fs){
+  int i;
+  printf("Maximo modulo.\n");
+  printf("Recibido fs=%f.\n",fs);
+  float maximo=0,candidato,fr_max;
+  for (i=n/2;i<n;i++){
+    candidato = sqrt(pow(vector[i].re, 2.0) + pow(vector[i].im, 2.0));
+    if (candidato>=maximo){
+      maximo = candidato;
+      fr_max = (((float)(i-n/2)/n - 0.5)*fs);
+    }
+  }
+  for (i=0;i<(n/2);i++){
+    candidato = sqrt(pow(vector[i].re, 2.0) + pow(vector[i].im, 2.0));
+    if (candidato>=maximo){
+      maximo = candidato;
+      fr_max = (((float)i/n)*fs);
+    }
+    
+  }
+  printf("El maximo se obtuvo en +/- %fHz.\n",fr_max);
+  printf("Fin de maximo modulo.\n");
+}
+
+
 

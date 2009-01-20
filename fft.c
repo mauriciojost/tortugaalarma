@@ -53,49 +53,52 @@ struct complex *cx;
 	/* Left out for compatibility with colmft.c
 	sc = (float)(sqrt(1.0/(double)(lx)));
 	*/
-	for(i=0; i<lx; i++)
-		{
-		if (i <= j)
-			{
-			ct.re = sc * cx[j].re;
-			ct.im = sc * cx[j].im;
-			cx[j].re = sc * cx[i].re;
-			cx[j].im = sc * cx[i].im;
-			cx[i].re = ct.re;
-			cx[i].im = ct.im;
-			}
+
+  /* Aparentemente es el orden reverso de los elementos del vector de muestras. */
+	for(i=0; i<lx; i++){          /* Procesa desde el primero hasta el último.    */
+
+    /* Este if hace (como resumen un swap):       cx[j] <=> cx[i]               */
+		if (i <= j){
+			ct.re = sc * cx[j].re;    /* ct = sc*cx[j]. Backup de cx[j].              */
+			ct.im = sc * cx[j].im;    /*                                              */
+			cx[j].re = sc * cx[i].re; /* cx[j]=sc*cx[i].                              */
+			cx[j].im = sc * cx[i].im; /*                                              */
+			cx[i].re = ct.re;         /* cx[i]=ct.                                    */
+			cx[i].im = ct.im;         /*                                              */
+		}
+
 		m = lx/2;
-		while (j > m-1)
-			{
+
+		while (j > m-1){
 			j = j - m;
 			m = m/2;
 			if (m < 1)
 				break;
-			}
-		j = j + m;
 		}
-	do
-		{
+		j = j + m;
+
+	}
+
+
+
+	do{
 		istep = 2*k;
-		for (m=0; m<k; m++)
-			{
+		for (m=0; m<k; m++){
 			arg = 3.14159265*signi*m/k;
 			cw.re = cos((double)arg);
 			cw.im = sin((double)arg);
-			for (i=m; i<lx; i+=istep)
-				{
-				ct.re = rmul(cw, cx[i+k]);
+			for (i=m; i<lx; i+=istep){
+				ct.re = rmul(cw, cx[i+k]);    /*             ct   =  cw   * cx[i+k]     */
 				ct.im = imul(cw, cx[i+k]);
-				cx[i+k].re = cx[i].re - ct.re;
+				cx[i+k].re = cx[i].re - ct.re;/*          cx[i+k] = cx[i] -   ct        */
 				cx[i+k].im = cx[i].im - ct.im;
 				cx[i].re = cx[i].re + ct.re;
 				cx[i].im = cx[i].im + ct.im;
-				}
 			}
-		k = istep;
 		}
-		while (k < lx);
+		k = istep;
+	}while (k < lx);
 
 	return(0);
-	}
+}
 
