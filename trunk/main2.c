@@ -3,9 +3,10 @@
 #include "archivo.h"
 #include "complejo.h"
 #include <time.h>
+#include <mpi.h>
 #define K 1024
 #define N K*K*16*2
-
+#define ROOT 0
 
 void escribir_fft_archivo_y_cerrar(FILE* fp, struct complex vector[], int n, float fs);
 
@@ -24,9 +25,42 @@ int main(int argc, char *argv[]){
   struct complex *vector;
   vector = (struct complex*) malloc(n*sizeof(struct complex));
   
-  cargar_vector_complejo(vector,n,fs,f);
 
-  ffttras();            /* Procesar FFT. El vector X sólo se usa una vez.*/
+  
+  
+
+
+
+  MPI_Init(&argc, &argv);  
+
+
+
+  //MPI_Type_contiguous(2, MPI_DOUBLE, &complex_MPI);
+  //MPI_Type_commit(&complex_MPI);
+  //MPI_Type_contiguous(n, complex_MPI, &vector_complex_MPI);
+  //MPI_Type_commit(&vector_complex_MPI);
+  MPI_Type_contiguous(2*n, MPI_DOUBLE, &vector_complex_MPI);
+  MPI_Type_commit(&vector_complex_MPI);
+
+  MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
+  MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+  
+
+  if (myrank == ROOT){
+    printf("Soy el ROOT. Cargando vector...\n");
+    cargar_vector_complejo(vector,n,fs,f);
+    printf("Soy el ROOT. Listo el vector. Enviando...\n");
+    //MPI_Send(vector, 1, vector_complex_MPI, 1, 123, MPI_COMM_WORLD);
+    MPI_Bcast(vector, 1, vector_complex_MPI, 0, MPI_COMM_WORLD);
+    printf("Soy el ROOT. Listo.\n");
+  }else{
+    printf("   Soy un hijo. Esperando vector...\n");
+    //MPI_Recv(vector, 1, vector_complex_MPI, 0, 123, MPI_COMM_WORLD, &status);
+    MPI_Bcast(vector, 1, vector_complex_MPI, 0, MPI_COMM_WORLD);
+    printf("   Soy un hijo. Recibido.\n");
+  }
+
+
 
 /*
 
@@ -55,7 +89,7 @@ int main(int argc, char *argv[]){
   //printf("Listo! FFT tardo %d ciclos.\n",tiempo);
 
 
-
+  MPI_Finalize();
   return 0;
 }
 
