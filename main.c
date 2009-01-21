@@ -3,8 +3,7 @@
 #include "archivo.h"
 #include "complejo.h"
 #include <time.h>
-#define K 1024
-#define N K*K*16*2
+#define N 512
 
 
 void escribir_fft_archivo_y_cerrar(FILE* fp, struct complex vector[], int n, float fs);
@@ -13,20 +12,43 @@ int main(int argc, char *argv[]){
   
   long n=N;
   long tiempo;
-	float signi=1, scale=1;
-  FILE *fp, *fp2, *fp3;
+  
   float fs=1000.0, f=300.0;
-  int men[4], nprocs, myrank, i;
-  MPI_Status status;
-  MPI_Datatype complex_MPI;
-  MPI_Datatype vector_complex_MPI;
 
   struct complex *vector;
   vector = (struct complex*) malloc(n*sizeof(struct complex));
   
   cargar_vector_complejo(vector,n,fs,f);
 
-  ffttras();            /* Procesar FFT. El vector X sólo se usa una vez.*/
+  ffttras(vector);            /* Procesar FFT. El vector X sólo se usa una vez.*/
+
+
+
+
+
+  return 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /*
 
@@ -53,14 +75,5 @@ int main(int argc, char *argv[]){
   //escribir_fft_archivo_y_cerrar(fp2,vector, n,fs);
   //escribir_modfft_archivo_y_cerrar(fp3,vector, n,fs);
   //printf("Listo! FFT tardo %d ciclos.\n",tiempo);
-
-
-
-  return 0;
-}
-
-
-
-
 
 

@@ -1,104 +1,101 @@
-/*	Fft.c
-	
-	1-d fast Fourier transform subroutine.
-	From Claerbout (1985) p. 70.
+#include "fft.h"
+#include "complejo.h"
+#include "wcomplex512.h"
+#include "revord512.h"
 
-	Usage:		int lx;
-			float signi, scale;
-			struct complex cx[];
+const int SIZE=512;
+
 
-			fft(lx, cx, signi, scale);
+void mariposa(struct complex a, struct complex b, struct complex* A, struct complex* B, int wn)
+{
+  struct complex w;
 
-	Compile:	cc prog.c fft.c -fswitch -lm -o prog.c
+  // A = (a+b)
+  A->re = a.re+b.re;
+  A->im = a.im+b.im;
 
-	Arguments:	lx	number of elements of vector to transform
-				MUST BE A POWER OF 2
-			cx	pointer to vector of complex structures
-			signi	sign of transform- +1 forward to Fourier domain
-						   -1 inverse to real domain
-			scale	scale factor to apply to data before tranform
-									*/
-/* Include the usual header files */
-#include <stdio.h>
-#include <math.h>
-
-/* Define complex multiplication and its conjugate */
-#define  rmul(x,y)      (x.re * y.re - x.im * y.im)
-#define  imul(x,y)      (x.im * y.re + x.re * y.im)
-#define rcmul(x,y)      (x.re * y.re + x.im * y.im)
-#define icmul(x,y)      (x.im * y.re - x.re * y.im)
-
-/* Declare the structure to hold complex numbers */
-struct complex 
-	{
-	double re; 
-	double im;
-	};
-
-/* Body of subroutine */
-fft(lx, cx, signi, sc)
-/* Declare all argument variables */
-int lx;
-float signi, sc;
-struct complex *cx;
-	{
-	/* Declare all local variables */
-	int i, j, k, m, istep;
-	float arg=3;
-	struct complex cw, ct;
-
+  // B = (a-b)*W
+  // B = (a-b)... 1° parte...
+  B->re = a.re-b.re;
+  B->im = a.im-b.im;
   
-	j = 0;
-	k = 1;
-	/* Left out for compatibility with colmft.c
-	sc = (float)(sqrt(1.0/(double)(lx)));
-	*/
-
-  /* Aparentemente es el orden reverso de los elementos del vector de muestras. */
-	for(i=0; i<lx; i++){          /* Procesa desde el primero hasta el Ãºltimo.    */
-
-    /* Este if hace (como resumen un swap):       cx[j] <=> cx[i]               */
-		if (i <= j){
-			ct.re = sc * cx[j].re;    /* ct = sc*cx[j]. Backup de cx[j].              */
-			ct.im = sc * cx[j].im;    /*                                              */
-			cx[j].re = sc * cx[i].re; /* cx[j]=sc*cx[i].                              */
-			cx[j].im = sc * cx[i].im; /*                                              */
-			cx[i].re = ct.re;         /* cx[i]=ct.                                    */
-			cx[i].im = ct.im;         /*                                              */
-		}
-
-		m = lx/2;
-
-		while (j > m-1){
-			j = j - m;
-			m = m/2;
-			if (m < 1)
-				break;
-		}
-		j = j + m;
-
-	}
-
-
-
-	do{
-		istep = 2*k;
-		for (m=0; m<k; m++){
-			arg = 3.14159265*signi*m/k;
-			cw.re = cos((double)arg);
-			cw.im = sin((double)arg);
-			for (i=m; i<lx; i+=istep){
-				ct.re = rmul(cw, cx[i+k]);    /*             ct   =  cw   * cx[i+k]     */
-				ct.im = imul(cw, cx[i+k]);
-				cx[i+k].re = cx[i].re - ct.re;/*          cx[i+k] = cx[i] -   ct        */
-				cx[i+k].im = cx[i].im - ct.im;
-				cx[i].re = cx[i].re + ct.re;  /*           cx[i]  = cx[i] +   ct        */
-				cx[i].im = cx[i].im + ct.im;
-			}
-		}
-		k = istep;
-	}while (k < lx);
-
-	return(0);
+  // B = (a-b)*W  2° parte...
+  multcmplxp(*B,wcomplex[wn],B);
+  
 }
+
+
+void ffttras(struct complex *x)
+{
+  int i, N=SIZE>>1;
+  /*for (i=0;i<SIZE;i++) // Podría ser la forma de asegurarse de que con longfixed no hay desborde... {x[i].re = x[i].re/SIZE;x[i].im = x[i].im/SIZE;}*/
+  
+  for(i=0;i<N;i++)
+  { 
+    mariposa     (x[i]    ,x[i+N]    ,&x[i],&x[i+N],i);
+  }
+  
+  fft(x,   N,2);
+  fft(x+N, N,2);
+  
+}
+
+
+void fft(struct complex x[], int len, int profundidad)
+{
+  int i, N=len>>1;
+  
+  if (len>1)
+  { 
+    for(i=0;i<N;i++)
+      mariposa(x[i],x[i+N],&x[i],&x[i+N],i*profundidad);
+    
+    fft(x,   N,profundidad*2);
+    fft(x+N, N,profundidad*2);
+  }
+}
+
+int revers(int pos)
+{ 
+  return vrev512[pos];
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+inline void mariposa_real(float a, float b, cmplx* A, cmplx* B, int wn)
+{
+  float aux;
+
+  // A = (a+b)
+  A->re = a+b;
+  A->im = 0;
+
+  // B = (a-b)*W
+  // B = (a-b)... 1° parte...
+  
+  aux = a-b;
+  
+  // B = (a-b)*W  2° parte...
+  
+  B->im = aux * wcomplex[wn].im;
+  B->re = aux * wcomplex[wn].re;
+  
+}
+*/
 
