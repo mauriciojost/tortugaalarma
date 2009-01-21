@@ -2,6 +2,7 @@
 #include "complejo.h"
 #include "wcomplex512.h"
 #include "revord512.h"
+#include <stdio.h>
 
 const int SIZE=512;
 
@@ -20,28 +21,42 @@ void mariposa(struct complex a, struct complex b, struct complex* A, struct comp
   B->im = a.im-b.im;
   
   // B = (a-b)*W  2° parte...
-  multcmplxp(*B,wcomplex[wn],B);
+  float arg = 3.14159265*2*wn/512;
+	w.re = cos((double)arg);
+	w.im = sin((double)arg);
+  multcmplxp(*B,w,B);
+
+  // B = (a-b)*W  2° parte...
+  //multcmplxp(*B,wcomplex[wn],B);
+
   
 }
 
 
-void ffttras(struct complex *x)
+void ffttras(struct complex *x,struct complex *y)
 {
   int i, N=SIZE>>1;
-  /*for (i=0;i<SIZE;i++) // Podría ser la forma de asegurarse de que con longfixed no hay desborde... {x[i].re = x[i].re/SIZE;x[i].im = x[i].im/SIZE;}*/
-  
+  printf("Antes de todo...\n");
+  imprimir_vector_complejo(x,SIZE);
   for(i=0;i<N;i++)
   { 
-    mariposa     (x[i]    ,x[i+N]    ,&x[i],&x[i+N],i);
+    mariposa     (x[i],x[i+N] ,&x[i],&x[i+N],i);
   }
+  printf("Antes de todo...\n");
+  imprimir_vector_complejo(x,SIZE);
   
   fft(x,   N,2);
   fft(x+N, N,2);
   
+  for(i=0;i<SIZE;i++)
+  { 
+    igcmplxp(x[i],  &y[revers(i)]);
+  }
+  
 }
 
 
-void fft(struct complex x[], int len, int profundidad)
+void fft(struct complex *x, int len, int profundidad)
 {
   int i, N=len>>1;
   
