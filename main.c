@@ -29,17 +29,16 @@ int main(int argc, char *argv[]){
   
   
   //escribir_archivo_y_cerrar(fp,vector, n);
-  tiempo = clock();
   printf("* Iniciado el procesamiento de FFT (%d muestras).\n", n);
-
+  tiempo = clock();
   ffttras(vector, vector2, n);            /* Procesar FFT. El vector X sólo se usa una vez.*/
-
-  printf("* Procesamiento de FFT terminado.\n");
   tiempo = clock() - tiempo;
+  printf("* Procesamiento de FFT terminado.\n");
   imprimir_maximo_modulo(vector2, n, fs);
   //escribir_modfft_archivo_y_cerrar(fp3,vector2, n,fs);
   printf("Listo! FFT tardo %d ciclos.\n",tiempo);
-
+  free(vector);
+  free(vector2);
   return 0;
 }
 

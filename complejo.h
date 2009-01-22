@@ -26,7 +26,7 @@ void imprimir_maximo_modulo(struct complex vector[], int n, float fs);
 void multcmplxp(struct complex a, struct complex b, struct complex *c);
 void sumcmplxp(struct complex a, struct complex b, struct complex *c);
 void rescmplxp(struct complex a, struct complex b, struct complex *c);
-void igcmplxp(struct complex a, struct complex *b);
+void igcmplxp(struct complex *a, struct complex *b);
 
 
 #endif /* _CMPLX_H */
