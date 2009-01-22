@@ -2,7 +2,8 @@
 #include "complejo.h"#include <stdio.h>
 
 unsigned int n_total;
-
+struct complex *vector2;
+struct complex *twiddle_factors;
 
 void mariposa(struct complex a, struct complex b, struct complex* A, struct complex* B, unsigned int wn)
 {
@@ -18,17 +19,31 @@ void mariposa(struct complex a, struct complex b, struct complex* A, struct comp
   B->im = a.im-b.im;
   
   // B = (a-b)*W  2° parte...
-  float arg = PI*2*wn/n_total;
+  /*float arg = PI*2*wn/n_total;
 	w.re = cos((double)arg);
 	w.im = sin((double)arg);
-  multcmplxp(*B,w,B);  
+  multcmplxp(*B,w,B);  */
+
+
+  multcmplxp(*B,twiddle_factors[wn],B);
 }
 void ffttras(struct complex *x,struct complex *y, unsigned int n){
   unsigned  i, semi_n=n>>1;
   unsigned int len_bits;
   len_bits = (unsigned int) log2(((float)n));
   n_total=n;
-  
+
+  twiddle_factors = (struct complex*) malloc(n/2*sizeof(struct complex));
+  struct complex w;
+  float arg;
+
+  for (i=0;i<n/2;i++){
+    arg = PI*2*i/n_total;
+	  w.re = cos((double)arg);
+	  w.im = sin((double)arg);
+
+    igcmplxp(w,  &twiddle_factors[i]);
+  }
 
   for(i=0;i<semi_n;i++){ 
     mariposa     (x[i],x[i+semi_n] ,&x[i],&x[i+semi_n],i);
