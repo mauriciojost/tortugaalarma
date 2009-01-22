@@ -9,15 +9,6 @@ struct complex
 	double im;
 };
 
-/*
-typedef struct
-{
-	double re;
-	double im;
-}complex;
-*/
-
-
 float rnd();
 void cargar_vector_complejo(struct complex vector[], int n, float fs, float f);
 void imprimir_vector_complejo(struct complex vector[], int n);

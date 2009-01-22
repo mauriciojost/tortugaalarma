@@ -20,3 +20,8 @@ archivo.o : archivo.c
 
 clean: 
 	rm -f *.o *~ fft *.out *.txt
+
+all:
+	make clean
+	make
+	./fft

@@ -27,9 +27,6 @@ void imprimir_vector_complejo(struct complex vector[], int n){
 
 
 
-
-
-
 void imprimir_maximo_modulo(struct complex vector[], int n, float fs){
   int i;
   printf("Maximo modulo.\n");
