@@ -1,8 +1,5 @@
 #include "fft.h"
-#include "complejo.h"
-#include "wcomplex512.h"
-#include "revord512.h"
-#include <stdio.h>
+#include "complejo.h"#include <stdio.h>
 
 
 
@@ -37,7 +34,7 @@ void ffttras(struct complex *x,struct complex *y, int n)
   fft(x+semi_n, semi_n,2);
   
   for(i=0;i<n;i++){ 
-    igcmplxp(x[i],  &y[revers(i)]);
+    igcmplxp(x[i],  &y[reversal_bit(i,9)]);
   }
   
 }
@@ -57,12 +54,19 @@ void fft(struct complex *x, int len, int profundidad)
   }
 }
 
-int revers(int pos)
-{ 
-  return vrev512[pos];
-}
 
+unsigned int reversal_bit(unsigned int a, unsigned int n){
+  unsigned int i=0;
+  unsigned int base=0;
+  unsigned int mask = 1<<(n-1);
+  unsigned int shift=1;
 
-int reversal_bit(int a, int n){
-  
+  //printf("base=%u, mask=%u, shift=%u, i=%u.\n",base,mask,shift,i);
+  for (i=0;i<n;i++){
+    base |= (mask & a)?shift:0;
+    mask = mask >> 1;
+    shift = shift << 1;
+    //printf("base=%u, mask=%u, shift=%u, i=%u.\n",base,mask,shift,i);
+  }
+  return base;
 }

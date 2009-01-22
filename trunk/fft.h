@@ -10,5 +10,5 @@ void mariposa(struct complex a, struct complex b, struct complex* A, struct comp
 void fft(struct complex x[], int len, int profundidad);
 void ffttras(struct complex *x,struct complex *y, int n);
 void mariposa_real(float a, float b, struct complex* A, struct complex* B, int wn);
-int reversal_bit(int a, int n);
+unsigned int reversal_bit(unsigned int a, unsigned int n_bits);
 #endif /* _FFTM_H */
