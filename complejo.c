@@ -60,7 +60,7 @@ void igcmplxp(struct complex *a, struct complex *b)
   b->im = a->im;
 }
 
-void multcmplxp(struct complex a, struct complex b, struct complex *c)
+void multcmplxp(struct complex *a, struct complex *b, struct complex *c)
 {
   struct complex d;
   /*             A . B               */
@@ -69,27 +69,13 @@ void multcmplxp(struct complex a, struct complex b, struct complex *c)
   /*       cr      +      ci.j       */
   /*               C                 */
   
-  d.re = (a.re*b.re) - (a.im*b.im);
-  d.im = (a.re*b.im) ;
-  d.im = d.im + (a.im*b.re);
+  d.re = (a->re*b->re) - (a->im*b->im);
+  d.im = (a->re*b->im) ;
+  d.im = d.im + (a->im*b->re);
 
-  //igcmplxp(d,c);
   c->re = d.re;
   c->im = d.im;
   
-}
-
-
-void sumcmplxp(struct complex a, struct complex b, struct complex *c)
-{
-  c->re = a.re+b.re;
-  c->im = a.im+b.im;
-}
-
-void rescmplxp(struct complex a, struct complex b, struct complex *c)
-{
-  c->re = a.re-b.re;
-  c->im = a.im-b.im;
 }
 
 

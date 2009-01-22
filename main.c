@@ -6,7 +6,7 @@
 #include <time.h>
 
 #define Ki 1024
-#define N Ki*Ki*16
+#define N Ki*Ki
 
 
 int main(int argc, char *argv[]){
