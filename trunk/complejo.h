@@ -9,7 +9,7 @@ struct complex
 	double im;
 };
 
-#define PI 3.14159265
+#define PI2 3.14159265*2
 
 float rnd();
 void cargar_vector_complejo(struct complex vector[], int n, float fs, float f);

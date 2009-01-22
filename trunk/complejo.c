@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "complejo.h"
-#define PI 3.14159265
+
 
 float rnd(){
   return (((float)rand())/RAND_MAX);
@@ -10,7 +10,7 @@ float rnd(){
 void cargar_vector_complejo(struct complex vector[], int n, float fs, float f){
   int i=0;
   for(i=0;i<n;i++){
-    vector[i].re = sin(2*PI*(f/fs)*i);
+    vector[i].re = sin(PI2*(f/fs)*i);
     vector[i].im = 0;
   }
   printf("Vector generado (f_sample=%fHz): f=%fHz\n",fs,f);
