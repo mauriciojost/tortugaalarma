@@ -1,9 +1,10 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <time.h>
 #include "archivo.h"
 #include "complejo.h"
 #include "fft.h"
-#include <time.h>
+
 
 #define Ki 1024
 #define N Ki*Ki

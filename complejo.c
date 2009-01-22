@@ -2,11 +2,6 @@
 #include <stdio.h>
 #include "complejo.h"
 
-
-float rnd(){
-  return (((float)rand())/RAND_MAX);
-}
-
 void cargar_vector_complejo(struct complex vector[], int n, float fs, float f){
   int i=0;
   for(i=0;i<n;i++){
@@ -52,13 +47,6 @@ void imprimir_maximo_modulo(struct complex vector[], int n, float fs){
 }
 
 
-
-
-void igcmplxp(struct complex *a, struct complex *b)
-{
-  b->re = a->re;
-  b->im = a->im;
-}
 
 void multcmplxp(struct complex *a, struct complex *b, struct complex *c)
 {
