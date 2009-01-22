@@ -7,8 +7,7 @@ struct complex *vector2;
 struct complex *twiddle_factors;
 
 void mariposa(struct complex *a, struct complex *b, struct complex* A, struct complex* B, unsigned int wn)
-{
-  struct complex w;
+{
 
   // A = (a+b)
   A->re = a->re+b->re;
@@ -26,7 +25,7 @@ void mariposa(struct complex *a, struct complex *b, struct complex* A, struct co
   multcmplxp(*B,w,B);  */
 
 
-  multcmplxp(*B,twiddle_factors[wn],B);
+  multcmplxp(B,&twiddle_factors[wn],B);
 }
 void ffttras(struct complex *x,struct complex *y, unsigned int n){
   unsigned  i, semi_n=n>>1;
