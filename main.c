@@ -13,7 +13,7 @@ int main(int argc, char *argv[]){
   
   long n=N;
   FILE *fp3, *fp2, *fp;
-  float fs=1000.0, f=77.0;
+  float fs=1000.0, f=176.0;
   int tiempo;
   struct complex *vector;
   vector = (struct complex*) malloc(n*sizeof(struct complex));

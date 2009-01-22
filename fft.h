@@ -4,9 +4,8 @@
 
 #include "complejo.h"
 
-int revers(int pos);
-int reverslento(int pos, int bits);
-void mariposa(struct complex *a, struct complex *b, struct complex* A, struct complex* B, unsigned int wn);
+
+void mariposa(struct complex *a, struct complex *b, unsigned int wn);
 void fft(struct complex x[], unsigned int len, unsigned int profundidad);
 void ffttras(struct complex *x,struct complex *y, unsigned int n);
 
