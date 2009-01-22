@@ -7,21 +7,21 @@ unsigned int n_total;
 struct complex *vector2;
 struct complex *twiddle_factors;
 
-void mariposa(struct complex *a, struct complex *b, unsigned int wn){
+void mariposa(struct complex *a, struct complex *b, unsigned int wn){  struct complex d,twf;
+  twf.re = twiddle_factors[wn].re;
+  twf.im = twiddle_factors[wn].im;
+
   // A = (a+b)
-  a->re = a->re + b->re;
-  a->im = a->im + b->im;
+  a->re = a->re + b->re; a->im = a->im + b->im;
 
   // B = (a-b)*W
-  // B = (a-b)... 1° parte...
-  b->re = a->re - b->re;
-  b->im = a->im - b->im;
-  
-  // B = (a-b)*W  2° parte...
-  multcmplxp(b,&twiddle_factors[wn],b);
+  b->re = a->re - b->re; b->im = a->im - b->im;
+  d.re = (b->re*twf.re) - (b->im*twf.im);
+  b->im = (b->re * twf.im) + (b->im*twf.re);
+  b->re = d.re;
 }
 
-void ffttras(struct complex *x,struct complex *y, unsigned int n){
+void ffttras(struct complex *senal,struct complex *fft_res, unsigned int n){
   unsigned  i, semi_n=n>>1;
   unsigned int len_bits, aux;
   float arg;
@@ -38,27 +38,17 @@ void ffttras(struct complex *x,struct complex *y, unsigned int n){
   }
 
   for(i=0;i<semi_n;i++){ 
-    mariposa     (&x[i], &x[i+semi_n], i);
+    mariposa     (&senal[i], &senal[i+semi_n], i);
   }
   
-  fft(x,   semi_n,2);
-  fft(x+semi_n, semi_n,2);
+  fft(senal,   semi_n,2);
+  fft(senal+semi_n, semi_n,2);
   
   struct complex interm;
   for(i=0;i<n;i++){ 
     aux = reversal_bit(i,len_bits);
-/*
-    interm.re = x[i].re;
-    interm.im = x[i].im;
-
-    x[i].re = x[aux].re;
-    x[i].im = x[aux].im;    
-    
-    x[aux].re = interm.re;
-    x[aux].im = interm.im;
-*/
-    y[aux].re = x[i].re;
-    y[aux].im = x[i].im;  
+    fft_res[aux].re = senal[i].re;
+    fft_res[aux].im = senal[i].im;  
   }
   
   free(twiddle_factors);
