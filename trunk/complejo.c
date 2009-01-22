@@ -54,10 +54,10 @@ void imprimir_maximo_modulo(struct complex vector[], int n, float fs){
 
 
 
-void igcmplxp(struct complex a, struct complex *b)
+void igcmplxp(struct complex *a, struct complex *b)
 {
-  b->re = a.re;
-  b->im = a.im;
+  b->re = a->re;
+  b->im = a->im;
 }
 
 void multcmplxp(struct complex a, struct complex b, struct complex *c)
@@ -72,7 +72,10 @@ void multcmplxp(struct complex a, struct complex b, struct complex *c)
   d.re = (a.re*b.re) - (a.im*b.im);
   d.im = (a.re*b.im) ;
   d.im = d.im + (a.im*b.re);
-  igcmplxp(d,c);
+
+  //igcmplxp(d,c);
+  c->re = d.re;
+  c->im = d.im;
   
 }
 
