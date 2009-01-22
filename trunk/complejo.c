@@ -24,8 +24,8 @@ void imprimir_vector_complejo(struct complex vector[], int n){
 
 void imprimir_maximo_modulo(struct complex vector[], int n, float fs){
   int i;
-  printf("Maximo modulo.\n");
-  printf("Recibido fs=%f.\n",fs);
+  //printf("Maximo modulo.\n");
+  //printf("Recibido fs=%f.\n",fs);
   float maximo=0,candidato,fr_max;
   for (i=n/2;i<n;i++){
     candidato = sqrt(pow(vector[i].re, 2.0) + pow(vector[i].im, 2.0));
@@ -43,28 +43,7 @@ void imprimir_maximo_modulo(struct complex vector[], int n, float fs){
     
   }
   printf("El maximo se obtuvo en +/- %fHz.\n",fr_max);
-  printf("Fin de maximo modulo.\n");
+  //printf("Fin de maximo modulo.\n");
 }
-
-
-
-void multcmplxp(struct complex *a, struct complex *b, struct complex *c)
-{
-  struct complex d;
-  /*             A . B               */
-  /*     (ar+ai*j) . (br+bi*j)       */
-  /*  ar.br-ai.bi  + (ar.bi+ai.br).j */
-  /*       cr      +      ci.j       */
-  /*               C                 */
-  
-  d.re = (a->re*b->re) - (a->im*b->im);
-  d.im = (a->re*b->im) ;
-  d.im = d.im + (a->im*b->re);
-
-  c->re = d.re;
-  c->im = d.im;
-  
-}
-
 
 

@@ -31,6 +31,8 @@ void ffttras(struct complex *senal,struct complex *fft_res, unsigned int n){
   twiddle_factors = (struct complex*) malloc(n/2*sizeof(struct complex));
 
 
+
+
   for (i=0;i<n/2;i++){
     arg = PI2*i/n_total;
 	  twiddle_factors[i].re = cos((double)arg);
@@ -86,3 +88,8 @@ unsigned int reversal_bit(unsigned int a, unsigned int n){
 }
 
 
+
+
+unsigned int calcular_resp(unsigned int np, unsigned int myrank, unsigned int etapa){
+  printf("np=%u, myrank=%u, etapa=%u\n",np,myrank,etapa);
+}
