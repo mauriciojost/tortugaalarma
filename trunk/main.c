@@ -8,14 +8,14 @@
 
 #define ROOT 0
 #define Ki 1024
-#define N 8
+#define N Ki*Ki
 
 
 int main(int argc, char *argv[]){
   
   long n=N;
 
-  float fs=1000.0, f=77;
+  float fs=1000.0, f=333.0;
   int tiempo;
   unsigned int np = 4;
 
@@ -62,7 +62,7 @@ int main(int argc, char *argv[]){
 
   //}
   //free(fft_res);
-  printf("0.Yo (%u) digo chau!!!\n", myrank);
+  printf("Yo (%u) digo chau!!!\n", myrank);
   MPI_Finalize();  
   
   return 0;
