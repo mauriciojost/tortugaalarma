@@ -3,7 +3,11 @@
 #include "complejo.h"
 #include "fft.h"#include <math.h>
 
-unsigned int n_total;
+unsigned int logbase2(unsigned int arg);
+
+unsigned int nro_muestras_total;
+unsigned int np_total;
+
 struct complex *vector2;
 struct complex *twiddle_factors;
 
@@ -21,20 +25,19 @@ void mariposa(struct complex *a, struct complex *b, unsigned int wn){  struct c
   b->re = d.re;
 }
 
-void ffttras(struct complex *senal,struct complex *fft_res, unsigned int n){
+void ffttras(struct complex *senal,struct complex *fft_res, unsigned int n,unsigned int nproc){
   unsigned  i, semi_n=n>>1;
   unsigned int len_bits, aux;
   float arg;
 
-  n_total=n;
-  len_bits = (unsigned int)((double)log2((double)n_total));
-  twiddle_factors = (struct complex*) malloc(n/2*sizeof(struct complex));
+  nro_muestras_total=n;
+  np_total = nproc;
+  //len_bits = (unsigned int)((double)log2((double)nro_muestras_total));
+  len_bits = logbase2(nro_muestras_total);
+  twiddle_factors = (struct complex*) malloc((n>>1)*sizeof(struct complex));
 
-
-
-
-  for (i=0;i<n/2;i++){
-    arg = PI2*i/n_total;
+  for (i=0;i<(n>>1);i++){
+    arg = PI2*i/nro_muestras_total;
 	  twiddle_factors[i].re = cos((double)arg);
 	  twiddle_factors[i].im = sin((double)arg);
   }
@@ -43,8 +46,8 @@ void ffttras(struct complex *senal,struct complex *fft_res, unsigned int n){
     mariposa     (&senal[i], &senal[i+semi_n], i);
   }
   
-  fft(senal,   semi_n,2);
-  fft(senal+semi_n, semi_n,2);
+  fft(senal,   semi_n,2,0, 0);
+  fft(senal+semi_n, semi_n,2,(np_total>>1), semi_n);
   
   struct complex interm;
   for(i=0;i<n;i++){ 
@@ -57,16 +60,31 @@ void ffttras(struct complex *senal,struct complex *fft_res, unsigned int n){
 }
 
 
-void fft(struct complex *x, unsigned int len, unsigned int profundidad){
-  unsigned int i, N=len>>1;
+void fft(struct complex *senal, unsigned int len, unsigned int profundidad, unsigned int myrank, unsigned int posicion /*,unsigned int todoyo*/){
+  unsigned int i, n=len>>1;
+  unsigned int posicion_segundo_hijo;
   
+  printf("fft: uP=%u/%d. Pos=%u. ",myrank,np_total, posicion);
+  printf("len=%u limite=%u ",len, nro_muestras_total/np_total);
   if (len>1){ 
-    for(i=0;i<N;i++)
-      mariposa(&x[i], &x[i+N], i*profundidad);
+    for(i=0;i<n;i++){
+      mariposa(&senal[i], &senal[i+n], i*profundidad);
+    }
     
-    fft(x,   N,profundidad*2);
-    fft(x+N, N,profundidad*2);
-  }
+    
+    if (len <= (nro_muestras_total/np_total)){
+      posicion_segundo_hijo = posicion;  
+      printf("Corto yo!!!!!!!!.\n");  
+      //sigoyo=1;
+    }else{
+      posicion_segundo_hijo = posicion+(len>>1);  
+      printf("Delego...\n");
+      //sigoyo=0;
+    }
+
+    fft(senal,   n,profundidad*2,myrank,posicion);
+    fft(senal+n, n,profundidad*2,myrank,posicion_segundo_hijo);    
+  }else{printf("\n");}
 }
 
 
@@ -92,4 +110,14 @@ unsigned int reversal_bit(unsigned int a, unsigned int n){
 
 unsigned int calcular_resp(unsigned int np, unsigned int myrank, unsigned int etapa){
   printf("np=%u, myrank=%u, etapa=%u\n",np,myrank,etapa);
+}
+
+
+unsigned int logbase2(unsigned int arg){
+  unsigned int i=0, multip=1;
+  while(multip<arg){
+    multip*=2;
+    i++;
+  }
+  return i;
 }
