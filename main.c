@@ -7,15 +7,16 @@
 
 
 #define Ki 1024
-#define N Ki*Ki
+#define N 32
 
 
 int main(int argc, char *argv[]){
   
   long n=N;
   FILE *fp3, *fp2, *fp;
-  float fs=1000.0, f=176.5555;
+  float fs=1000.0, f=187.5;
   int tiempo;
+  unsigned int np = 8;
   struct complex *senal;
 
   senal = (struct complex*) malloc(n*sizeof(struct complex));
@@ -33,7 +34,7 @@ int main(int argc, char *argv[]){
   //escribir_archivo_y_cerrar(fp,vector, n);
   //printf("* Iniciado el procesamiento de FFT (%d muestras).\n", n);
   tiempo = clock();
-  ffttras(senal, fft_res, n);            /* Procesar FFT. El vector X sólo se usa una vez.*/
+  ffttras(senal, fft_res, n,np);            /* Procesar FFT. El vector X sólo se usa una vez.*/
   tiempo = clock() - tiempo;
   free(senal);
   //printf("* Procesamiento de FFT terminado.\n");
