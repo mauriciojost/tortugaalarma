@@ -4,6 +4,7 @@
 #include "fft.h"#include <math.h>
 
 unsigned int logbase2(unsigned int arg);
+unsigned int responsab(unsigned int posic);
 
 unsigned int nro_muestras_total;
 unsigned int np_total;
@@ -47,7 +48,7 @@ void ffttras(struct complex *senal,struct complex *fft_res, unsigned int n,unsig
   }
   
   fft(senal,   semi_n,2,0, 0);
-  fft(senal+semi_n, semi_n,2,(np_total>>1), semi_n);
+  fft(senal+semi_n, semi_n,2,responsab(semi_n), semi_n);
   
   struct complex interm;
   for(i=0;i<n;i++){ 
@@ -60,31 +61,33 @@ void ffttras(struct complex *senal,struct complex *fft_res, unsigned int n,unsig
 }
 
 
-void fft(struct complex *senal, unsigned int len, unsigned int profundidad, unsigned int myrank, unsigned int posicion /*,unsigned int todoyo*/){
-  unsigned int i, n=len>>1;
-  unsigned int posicion_segundo_hijo;
+void fft(struct complex *senal, unsigned int mylen, unsigned int profundidad, unsigned int myrank, unsigned int posicion){
+  unsigned int i, semi_len=mylen>>1;
+  unsigned int posicion_segundo_hijo, respons;
   
-  printf("fft: uP=%u/%d. Pos=%u. ",myrank,np_total, posicion);
-  printf("len=%u limite=%u ",len, nro_muestras_total/np_total);
-  if (len>1){ 
-    for(i=0;i<n;i++){
-      mariposa(&senal[i], &senal[i+n], i*profundidad);
+  //printf("fft: uP=%u/%d. Pos=%u. ",myrank,np_total, posicion);
+  //printf("len=%u limite=%u ", mylen, nro_muestras_total/np_total);
+  if (mylen>1){ 
+    for(i=0;i<semi_len;i++){
+      mariposa(&senal[i], &senal[i+semi_len], i*profundidad);
     }
     
-    
-    if (len <= (nro_muestras_total/np_total)){
+    if (mylen <= (nro_muestras_total/np_total)){
       posicion_segundo_hijo = posicion;  
-      printf("Corto yo!!!!!!!!.\n");  
-      //sigoyo=1;
+      respons = myrank;
+      //printf("Sigo yo!!!!!!!!.\n");  
     }else{
-      posicion_segundo_hijo = posicion+(len>>1);  
-      printf("Delego...\n");
-      //sigoyo=0;
+      posicion_segundo_hijo = posicion+(mylen>>1);  
+      respons = responsab(posicion_segundo_hijo);
+      //printf("Delego a %u (yo),y %u...\n", myrank, respons);
+
     }
 
-    fft(senal,   n,profundidad*2,myrank,posicion);
-    fft(senal+n, n,profundidad*2,myrank,posicion_segundo_hijo);    
-  }else{printf("\n");}
+    fft(senal,   semi_len,profundidad*2,myrank,posicion);
+    fft(senal+semi_len, semi_len,profundidad*2,myrank,posicion_segundo_hijo);    
+  }else{
+    //printf("Corto yo!!!!!!!!.\n");
+  }
 }
 
 
@@ -120,4 +123,14 @@ unsigned int logbase2(unsigned int arg){
     i++;
   }
   return i;
+}
+
+
+unsigned int responsab(unsigned int posic){  
+  unsigned int myrank;
+  unsigned int bloque = (unsigned int)(nro_muestras_total/np_total);
+  
+  myrank = posic / bloque;
+  printf("   Solicitada resp. (posic=%u -> resp=%u).\n",posic,myrank);
+  return myrank;
 }
