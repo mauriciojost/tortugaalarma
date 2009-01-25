@@ -72,7 +72,25 @@ void escribir_fft_archivo_y_cerrar(FILE* fp, struct complex vector[], int n, flo
 
 
 void cerrar_archivo(FILE* fp){
-
+  fclose (fp);
 }
+
+
+
+    //FILE *fp3, *fp2, *fp;
+    //fp  = (FILE*) abrir_archivo_out("senal_usada.txt");
+    //fp2 = (FILE*) abrir_archivo_out("salida.txt");
+    //fp3 = (FILE*) abrir_archivo_out("salidamod.txt");
+    
+    //escribir_archivo_y_cerrar(fp,vector, n);
+    //printf("* Iniciado el procesamiento de FFT (%d muestras).\n", n);
+    //tiempo = clock();
+    //ffttras(senal, fft_res, n,np);            /* Procesar FFT. El vector X sólo se usa una vez.*/
+    //tiempo = clock() - tiempo;
+    //free(senal);
+    //printf("* Procesamiento de FFT terminado.\n");
+    //imprimir_maximo_modulo(fft_res, n, fs);
+    //escribir_modfft_archivo_y_cerrar(fp3,vector2, n,fs);
+    //printf("Listo! FFT tardo %d ciclos.\n",tiempo);
 
 
