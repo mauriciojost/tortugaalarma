@@ -25,4 +25,4 @@ all:
 	make clean
 	make
 	echo "**************************************************"
-	mpirun -np 2 ./fft
+	mpirun -np 4 ./fft

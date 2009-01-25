@@ -10,7 +10,7 @@ struct complex
 	double im;
 };
 
-
+typedef struct complex scomplex;
 
 
 void cargar_vector_complejo(struct complex vector[], int n, float fs, float f);
