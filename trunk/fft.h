@@ -4,10 +4,14 @@
 
 #include "complejo.h"
 
+typedef unsigned int uint;
+typedef struct complex scomplex;
+inline void mariposa(struct complex *a, struct complex *b, uint wn);
+void fft(struct complex x[], uint len, uint profundidad, uint myrank, uint posicion);
+void ffttras(struct complex *x,struct complex *y, uint n, uint np);
+uint reversal_bit(uint a, uint n_bits);
+uint logbase2(uint arg);
+uint responsab(uint posic);
 
-void mariposa(struct complex *a, struct complex *b, unsigned int wn);
-void fft(struct complex x[], unsigned int len, unsigned int profundidad, unsigned int myrank, unsigned int posicion);
-void ffttras(struct complex *x,struct complex *y, unsigned int n, unsigned int np);
 
-unsigned int reversal_bit(unsigned int a, unsigned int n_bits);
 #endif /* _FFTM_H */

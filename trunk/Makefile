@@ -1,4 +1,4 @@
-CC = gcc
+CC = mpicc
 FLAGS = -lm
 
 # Makefile
@@ -24,4 +24,5 @@ clean:
 all:
 	make clean
 	make
-	./fft
+	echo "**************************************************"
+	mpirun -np 2 ./fft
