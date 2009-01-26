@@ -8,7 +8,7 @@
 
 #define ROOT 0
 #define Ki 1024
-#define N Ki*Ki
+#define N Ki
 
 
 int main(int argc, char *argv[]){
