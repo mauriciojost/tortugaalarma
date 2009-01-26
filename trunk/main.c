@@ -8,18 +8,17 @@
 
 #define ROOT 0
 #define Ki 1024
-#define N Ki
+#define N Ki*Ki*32
 
 
 int main(int argc, char *argv[]){
   
   long n=N;
 
-  float fs=1000.0, f=333.0;
+  float fs=1000.0, f=367.0;
   int tiempo;
-  unsigned int np = 4;
 
-  int nprocs, myrank, i;
+  unsigned int nprocs, myrank, i;
   MPI_Status status;
   MPI_Datatype complex_MPI;
   struct complex *senal;
@@ -34,14 +33,14 @@ int main(int argc, char *argv[]){
   //MPI_Type_commit(&complex_MPI);
 
   MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
-  //MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+  MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
   
   if (myrank == ROOT){
-    //printf("Soy el ROOT. Cargando vector...\n");
+    printf("Soy el ROOT. Cargando vector...\n");
     cargar_vector_complejo(senal,n,fs,f);
-    //printf("Soy el ROOT. Listo el vector. Enviando...\n");
+    printf("Soy el ROOT. Listo el vector. Enviando...\n");
     //MPI_Send(senal, n, complex_MPI, 1, 123, MPI_COMM_WORLD);
-    //printf("Soy el ROOT. Listo.\n");
+    printf("Soy el ROOT. Listo.\n");
   }//else{
     //printf("   Soy un hijo. Esperando vector...\n");
     //MPI_Recv(senal, n, complex_MPI, 0, 123, MPI_COMM_WORLD, &status);
@@ -51,7 +50,7 @@ int main(int argc, char *argv[]){
     /* AAA */    
     //printf("* Iniciado el procesamiento de FFT (%d muestras).\n", n);
     //tiempo = clock();
-    ffttras(senal, fft_res, n,np);            /* Procesar FFT. El vector X sólo se usa una vez.*/
+    ffttras(senal, fft_res, n,nprocs);            /* Procesar FFT. El vector X sólo se usa una vez.*/
     //tiempo = clock() - tiempo;
     //free(senal);
   if (myrank == ROOT){
