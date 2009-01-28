@@ -17,24 +17,20 @@
 % Cuerpo.
 \begin{document}
 \pagestyle{empty}
-%\maketitle                                                  % Escribe el título.
+%\maketitle     % Escribe el título.
 \begin{center}
-
+% Uso de tamaños (mediante ambientes): small, normalsize, large, Large y LARGE.
 
 \begin{LARGE}
-\bigskip\bigskip\bigskip\bigskip
-Trabajo Práctico\\ 
+\bigskip\bigskip\bigskip\bigskip    % Espacios grandes.
+Trabajo Práctico Final\\
 \bigskip\bigskip
 \textbf{Transformada Rápida de Fourier Paralelizada}\\
 \bigskip\bigskip
 \end{LARGE}
 
-\begin{Large}
-Sistemas Operativos II\\                              % Usado por \maketitle.
-\end{Large}
-
-\bigskip
-\bigskip
+\begin{Large}Sistemas Operativos II\\\end{Large}
+\bigskip\bigskip
 
 \begin{figure}[htp]
 \centering
@@ -45,11 +41,12 @@ Facultad de Ciencias Exactas, Físicas y Naturales\\
 UNC
 \end{normalsize}
 
-\vfill
+\vfill  % Rellena hasta que el bloque siguiente llegue al final.
+
 \begin{large}
-Mauricio G. Jost\\        
-\bigskip              
-2009\\                
+\textbf{Mauricio G. Jost}\\
+\bigskip\bigskip\bigskip
+2009\\
 \end{large}
 
 
@@ -71,6 +68,7 @@ de arquitecturas de computadoras. El presente trabajo pretende realizar la imple
 del mismo, pero no haciendo hincapié en recursos específicos de determinada
 arquitectura, sino en características más bien generales, presentes en casi todos los
 sistemas multiprocesadores de la actualidad.
+
 El fin es naturalmente aumentar el grado de utilización de los recursos en esta clase de
 sistemas, pero sin perder portabilidad. MPI es una herramienta que cumple con estos
 enunciados, y a la cual se ha recurrido para la implementación final, siguiendo así los
@@ -79,82 +77,149 @@ lineamientos de la materia.
 \newpage
 \section{Marco Teórico: FFT}
 
-\subsection{Usos de FFT}
-La Transformada Rápida de Fourier (FFT) constituye uno de los cálculos más habituales en el
-tratamiento de señales digitales. Es una forma eficiente de obtener la Transformada
-Discreta de Fourier.
+\subsection{Usos de DFT y FFT}
 
 La DFT posee una gran utilidad, que radica en la posibilidad de aplicar filtrados y otros
-tipos de procesamiento a señales obtenidas de cualquier tipo de fuente, pero en un dominio de
-frecuencias. Esto en muchos casos facilita la interpretación del problema por parte del 
-programador, lo cual muchas veces ayuda a lograr algoritmos más abstractos y de mejores
+tipos de procesamiento a señales obtenidas de cualquier tipo de fuente analógica, pero en
+un dominio de frecuencias. Esto en muchos casos facilita la interpretación del problema por
+parte del programador, lo cual ayuda a lograr algoritmos más abstractos y de mejores
 resultados.
-La FFT es una forma más eficiente de obtener el mismo resultado que se obtiene con la DFT. 
-La FFT puede definirse como un reajuste matemático de la DFT para una obtención del resultado
-a través de menos operaciones matemáticas, y por ello menos tiempo computacional.
+
+Sin embargo, la Transformada Rápida de Fourier (FFT) constituye uno de los cálculos más
+habituales en el tratamiento de señales digitales. Es una forma eficiente de obtener la
+Transformada Discreta de Fourier (DFT). Genera el mismo resultado que se obtiene con la DFT.
+La FFT puede definirse como un reajuste matemático de la DFT para una obtención del mismo
+resultado a través de menos operaciones matemáticas, y por ello menos tiempo computacional.
 
 
-\subsection{}
+\subsection{Enfoque del diseño del algoritmo}
 
 Si bien el volumen de procesamiento involucrado para obtener la DFT se reduce con el algoritmo
-de FFT, sigue siendo este altamente costoso en términos de tiempo. En la actualidad existen 
-varias alternativas para implementar la FFT, desde código en lenguajes conocidos como C, C++
-o Fortran, pasando por implementaciones en ensamblador (las más habituales, orientadas a procesadores
-DSP), y hasta implementaciones dedicadas en hardware, con lenguajes como Verilog o VHDL. 
-No es intensión del autor lograr la máxima eficiencia para un sistema dado, sino lograr un 
-algoritmo que tenga buena respuesta en general, en cualquier sistema multiprocesador moderno.
+de FFT, sigue siendo este altamente costoso en términos de tiempo. En la actualidad existen
+varias alternativas para implementar la FFT, desde código en conocidos lenguajes como C, C++
+o Fortran, pasando por implementaciones en ensamblador (las más habituales, orientadas
+específicamente a procesadores DSP), y hasta implementaciones en hardware, con lenguajes
+como Verilog o VHDL.
 
+No es intensión del autor lograr la máxima eficiencia para un sistema dado, sino lograr un
+algoritmo que tenga buena respuesta general, en cualquier sistema multiprocesador moderno.
 
-\section{Paralelismo y portabilidad}
-\textbf{Negrita}.
-\textit{Cursiva}.
-\underline{Subrayado}.
-\texttt{Máquina de escribir.}
-\textsc{Mayúsculas.}
-\textcolor{red}{Texto en rojo.}
-\subsection{Tips}
-\section{Viñetas y enumeraciones}
-\subsection{Viñetas}
+\subsection{Breve introducción a la implementación de FFT}
+Para el procesamiento de N muestras $x_{(n)}$ (N debe ser potencia de 2), se tiene
+la siguiente ecuación para la obtención de su DFT:
+
+\begin{equation}
+\label{E:DFT}
+	X_{(k)} = \sum_{n=0}^{N-1} x_{(n)} e^{-\frac{j2\pi}{N}} \quad , \quad 0\leq k\leq{N-1}
+\end{equation}
+El factor
+\begin{equation}
+	e^{-\frac{j2\pi}{N}} = \omega_N^{kn}
+\end{equation}
+es llamado \textit{phase factor}. 
+Este factor presenta periodicidad, y cierta simetría que no es aprovechada por DFT, pero sí por FFT. 
 \begin{itemize}
-\item Item1...
-\item Item2...
+\item Propiedad de simetría: $\omega_N^{k+N/2} = -\omega_N^{k}$
+\item Propiedad de periodicidad: $\omega_N^{k+N} = \omega_N^{k}$
 \end{itemize}
-\subsection{Enumeración}
+Este hecho permite que la cantidad total de multiplicaciones y sumas necesarias para el resultado final, disminuya.
+
+Como consecuencia final de la utilización de estas propiedades, se obtiene que la ecuación (\ref{E:DFT})
+pueda expresarse (definida por partes) de la siguiente manera:
+
+\begin{equation}
+\label{E:FFT1}
+    X_{(2k)} = \sum_{n=0}^{\frac{N}{2}-1}[x_{(n)} + x_{(n+\frac{N}{2})}], \quad k=0,1,\dots,\frac{N}{2}-1
+\end{equation}
+\begin{equation}
+\label{E:FFT2}
+    X_{(2k+1)} = \sum_{n=0}^{\frac{N}{2}-1}[x_{(n)} - x_{(n+\frac{N}{2})}], \quad k=0,1,\dots,\frac{N}{2}-1
+\end{equation}
+
+La aplicación de estas ecuaciones a un conjunto de muestras $x_{(n)}$ está representado en la figura (\ref{F:Etapas}). El proceso entero requiere $\log_2{N}$ etapas de decimación (DFT). 
+
+La siguiente figura describe el sentido práctico de las ecuaciones (\ref{E:FFT1}) y (\ref{E:FFT2}).
+
+
+\bigskip
+\begin{figure}[htp]
+\centering
+\includegraphics[scale=0.45]{etapas}
+\caption{Etapas de la FFT ($N=8$).}
+\label{F:Etapas}
+\end{figure}
+\bigskip
+
+
+Cada una de las etapas involucra $\frac{N}{2}$ mariposas del tipo mostrado en la figura (\ref{F:Mariposa}).
+
+
+\bigskip
+\begin{figure}[htp]
+\centering
+\includegraphics[scale=0.65]{mariposa}
+\caption{Mariposa para decimación en frecuencia.}
+\label{F:Mariposa}
+\end{figure}
+\bigskip
+
+\subsection{Recursividad y paralelismo en el algoritmo}
+\subsubsection{Recursividad}
+El algoritmo puede ser llevado a una forma recursiva. Así, en cada etapa, se realizan dos llamadas a la misma función
+de origen. Esta forma de escribir el algoritmo facilita mucho su abordaje conceptual. 
+
+\bigskip
+\begin{figure}[htp]
+\centering
+\includegraphics[scale=0.65]{recursividad}
+\caption{Recursividad de FFT con decimación en frecuencia.}
+\label{F:Recursividad}
+\end{figure}
+\bigskip
+
+Existen muchas implementaciones
+escritas en base a bucles, en búsqueda de eficiencia. Por desgracia estas son un tanto más difíciles de desglosar, y su
+paralelización requiere de un cuidado extremo. En el corriente trabajo se ha optado por algoritmos recursivos, que permiten
+divisar fácilmente la escencia de la idea sobre la cual fueron construidos. 
+
+\subsubsection{Paralelismo}
+
+Como se puede observar en la figura (\ref{F:Etapas}), no existe dependencia entre dos bloques de datos luego de una bifurcación. Esto permite que los hilos o procesos que llevan a cabo las tareas para cada bloque, no requieran sincronizaciones tan frecuentes, o dicho de otra forma, presenten una granularidad alta de sincronización. Las condiciones de paralelismo de este algoritmo son favorables desde este punto de vista. 
+
+Sin embargo, antes de la bifurcación, no es sencillo lograr procesamiento paralelo que brinde mejoras considerables. Esto es a causa de que en etapas iniciales, la granularidad es fina. La inter-dependencia de los datos es alta, lo cual hace necesario un algoritmo bastante más complejo que las coordine, y de una sobrecarga no menor.
+
+En este trabajo se ha optado por buscar la eficiencia desde la simpleza y la casi nula sobrecarga de sincronización.
+
+
+\subsection{Balance de carga}
+
+Para obtener cierto balance de carga, se ha optado por una \textit{asignación parcial de tareas}.
+En el momento en que todas las mariposas de una cierta etapa han sido calculadas, se procede a asignar cada bloque
+resultante (de dos), a diferentes procesos. La regla a seguir es sencilla:
+
 \begin{enumerate}
-\item Item1...
-\item Item2...
+\item Siempre parte con el conjunto de mariposas de la etapa 1° el proceso ROOT.
+\item Llegado el momento de la bifurcación, se reasignan tareas. El bloque superior (siguiendo la figura (\ref{F:Etapas})) se mantiene en el proceso actual.
+    El bloque inferior, en caso de haber aún procesos ociosos, es asignado a uno de ellos. La regla de asignación está asociada a la correspondencia que tiene cierto proceso, a cierto \textit{bloque básico de asignación}\footnote{Ejemplo: se desea conocer el procesador asignado al bloque con inicio en 192. En caso de tener $N_P=8$ procesadores y $N_M=256$ muestras, la regla asigna al bloque con inicio en 192 el procesador $192\frac{N_P}{N_M} = 192\frac{8}{256} = 6$.}.
+\item Una vez que se han ocupado todos los procesos existentes, las asignaciones permanecen sin modificación.
 \end{enumerate}
 
-\section{Inserción de imágenes}
-
-Para insertar una imagen se hace lo siguiente.
-
-
-
-\section{Fórmulas matemáticas}
-\subsection{En la misma línea}
-Ejemplos (en la misma línea): $\pi r^2$, $x = 3 \times 5$.
-También se pueden usar macros. Por ejemplo $\piRsquare$.
-
-\subsection{De línea especial}
-\subsubsection{Sin enumeración}
-Para una fórmula más distinguida se utiliza una nueva línea, dedicada. Así:
-$$\mu^{\alpha+3} + (\alpha^{\beta}+\theta_{\gamma}+\delta+\zeta)$$
-\subsubsection{Con enumeración}
-Para enumerar las ecuaciones se genera un ambiente de
-ecuaciones. Así:
-\begin{equation}
-	y_{i+1} = x_{i}^{2n} - \sqrt{5}x_{i-1}^{n} + \sqrt{x_{i-2}^7} -1
-\end{equation}
+La ecuación utilizada para obtener el proceso responsable de tratar cierto bloque está dada por:
 
 \begin{equation}
-	\frac{\partial u}{\partial t} + \nabla^{4}u + \nabla^{2}u +
-        \frac12    |\nabla u|^{2}~ =~ c^2
+\label{E:responsabilidad}
+    P_{id} = B_{inicio}\frac{N_P}{N_M}
 \end{equation}
-\section{Notas al pie}
-Para hacer notas al pie podés hacer nota\footnote{Nota al pie asociada.}.
-También pueden realizarse notas al pie con numeración manual\footnote[20]{Nota al pie, pero enumerada manualmente.}.
-\section{Tablas}
+
+donde:\\
+$P_{id}$ es el número de proceso.\\
+$B_{inicio}$ es el punto inicial del bloque.\\
+$N_P$ es la cantidad de procesos.\\
+$N_M$ es la longitud de la muestra (en coeficientes).\\
+
+\section{Mediciones}
+
+
 \begin{tabular}{lll}\hline
 Ciudad&País&Continente\\\hline
 Bogotá&Colombia&América\\
@@ -163,9 +228,6 @@ París&Francia&Europa\\
 \end{tabular}
 
 
-\section{Agradecimientos}
-%Gracias a Internet, que me dio este ejemplo.
-%en.wikipedia.org wiki Fast_Fourier_transform
 
 \newpage
 
