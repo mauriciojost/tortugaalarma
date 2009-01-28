@@ -1,0 +1,178 @@
+\documentclass[12pt,a4paper,final,onecolumn]{article}
+
+\usepackage[ansinew]{inputenc}
+\usepackage[spanish,activeacute]{babel}
+\usepackage{color}
+\usepackage{graphicx}
+\usepackage{anysize}
+
+% Encabezado.
+%\marginsize{2cm}{2cm}{2cm}{2cm}                            % Márgenes -> izq, der, sup, inf.
+\newcommand{\piRsquare}{\pi r^2}                            % Nuevo macro.
+\title{Transformada Rápida de Fourier Paralelizada}         % Usado por \maketitle.
+\author{Mauricio Jost}                                      % Usado por \maketitle.
+\date{2009}                                                 % Usado por \maketitle.
+
+
+% Cuerpo.
+\begin{document}
+\pagestyle{empty}
+%\maketitle                                                  % Escribe el título.
+\begin{center}
+
+
+\begin{LARGE}
+\bigskip\bigskip\bigskip\bigskip
+Trabajo Práctico\\ 
+\bigskip\bigskip
+\textbf{Transformada Rápida de Fourier Paralelizada}\\
+\bigskip\bigskip
+\end{LARGE}
+
+\begin{Large}
+Sistemas Operativos II\\                              % Usado por \maketitle.
+\end{Large}
+
+\bigskip
+\bigskip
+
+\begin{figure}[htp]
+\centering
+\includegraphics[scale=0.5]{UNC}
+\end{figure}
+\begin{normalsize}
+Facultad de Ciencias Exactas, Físicas y Naturales\\
+UNC
+\end{normalsize}
+
+\vfill
+\begin{large}
+Mauricio G. Jost\\        
+\bigskip              
+2009\\                
+\end{large}
+
+
+
+
+
+
+
+\end{center}
+\newpage                                                    % Nueva página.
+
+\pagestyle{plain}
+
+\setcounter{page}{1}
+\section{Introducción}
+
+Los algoritmos de implementación de FFT son múltiples, y existen tantos como cantidad
+de arquitecturas de computadoras. El presente trabajo pretende realizar la implementación
+del mismo, pero no haciendo hincapié en recursos específicos de determinada
+arquitectura, sino en características más bien generales, presentes en casi todos los
+sistemas multiprocesadores de la actualidad.
+El fin es naturalmente aumentar el grado de utilización de los recursos en esta clase de
+sistemas, pero sin perder portabilidad. MPI es una herramienta que cumple con estos
+enunciados, y a la cual se ha recurrido para la implementación final, siguiendo así los
+lineamientos de la materia.
+
+\newpage
+\section{Marco Teórico: FFT}
+
+\subsection{Usos de FFT}
+La Transformada Rápida de Fourier (FFT) constituye uno de los cálculos más habituales en el
+tratamiento de señales digitales. Es una forma eficiente de obtener la Transformada
+Discreta de Fourier.
+
+La DFT posee una gran utilidad, que radica en la posibilidad de aplicar filtrados y otros
+tipos de procesamiento a señales obtenidas de cualquier tipo de fuente, pero en un dominio de
+frecuencias. Esto en muchos casos facilita la interpretación del problema por parte del 
+programador, lo cual muchas veces ayuda a lograr algoritmos más abstractos y de mejores
+resultados.
+La FFT es una forma más eficiente de obtener el mismo resultado que se obtiene con la DFT. 
+La FFT puede definirse como un reajuste matemático de la DFT para una obtención del resultado
+a través de menos operaciones matemáticas, y por ello menos tiempo computacional.
+
+
+\subsection{}
+
+Si bien el volumen de procesamiento involucrado para obtener la DFT se reduce con el algoritmo
+de FFT, sigue siendo este altamente costoso en términos de tiempo. En la actualidad existen 
+varias alternativas para implementar la FFT, desde código en lenguajes conocidos como C, C++
+o Fortran, pasando por implementaciones en ensamblador (las más habituales, orientadas a procesadores
+DSP), y hasta implementaciones dedicadas en hardware, con lenguajes como Verilog o VHDL. 
+No es intensión del autor lograr la máxima eficiencia para un sistema dado, sino lograr un 
+algoritmo que tenga buena respuesta en general, en cualquier sistema multiprocesador moderno.
+
+
+\section{Paralelismo y portabilidad}
+\textbf{Negrita}.
+\textit{Cursiva}.
+\underline{Subrayado}.
+\texttt{Máquina de escribir.}
+\textsc{Mayúsculas.}
+\textcolor{red}{Texto en rojo.}
+\subsection{Tips}
+\section{Viñetas y enumeraciones}
+\subsection{Viñetas}
+\begin{itemize}
+\item Item1...
+\item Item2...
+\end{itemize}
+\subsection{Enumeración}
+\begin{enumerate}
+\item Item1...
+\item Item2...
+\end{enumerate}
+
+\section{Inserción de imágenes}
+
+Para insertar una imagen se hace lo siguiente.
+
+
+
+\section{Fórmulas matemáticas}
+\subsection{En la misma línea}
+Ejemplos (en la misma línea): $\pi r^2$, $x = 3 \times 5$.
+También se pueden usar macros. Por ejemplo $\piRsquare$.
+
+\subsection{De línea especial}
+\subsubsection{Sin enumeración}
+Para una fórmula más distinguida se utiliza una nueva línea, dedicada. Así:
+$$\mu^{\alpha+3} + (\alpha^{\beta}+\theta_{\gamma}+\delta+\zeta)$$
+\subsubsection{Con enumeración}
+Para enumerar las ecuaciones se genera un ambiente de
+ecuaciones. Así:
+\begin{equation}
+	y_{i+1} = x_{i}^{2n} - \sqrt{5}x_{i-1}^{n} + \sqrt{x_{i-2}^7} -1
+\end{equation}
+
+\begin{equation}
+	\frac{\partial u}{\partial t} + \nabla^{4}u + \nabla^{2}u +
+        \frac12    |\nabla u|^{2}~ =~ c^2
+\end{equation}
+\section{Notas al pie}
+Para hacer notas al pie podés hacer nota\footnote{Nota al pie asociada.}.
+También pueden realizarse notas al pie con numeración manual\footnote[20]{Nota al pie, pero enumerada manualmente.}.
+\section{Tablas}
+\begin{tabular}{lll}\hline
+Ciudad&País&Continente\\\hline
+Bogotá&Colombia&América\\
+Peking&Japón&Asia\\
+París&Francia&Europa\\
+\end{tabular}
+
+
+\section{Agradecimientos}
+%Gracias a Internet, que me dio este ejemplo.
+%en.wikipedia.org wiki Fast_Fourier_transform
+
+\newpage
+
+\tableofcontents
+
+\newpage
+
+\listoffigures
+
+\end{document}             % End of document.
