@@ -21,6 +21,9 @@ scomplex *vector2;
 scomplex *twiddle_factors;
 
 void fft_recibir_tarea();
+uint responsab_ord(uint uP);
+void ordenar_bit_reversal(scomplex* senal, scomplex* fft_res, uint n);
+void ordenar_bit_reversal1(scomplex* senal, scomplex* fft_res, uint n, uint np, uint myrank);
 float calcular_suma_verif(uint semi_len, scomplex* senal);
 void derivar_trabajo(scomplex* senal, uint semi_len, uint profundidad, uint respons, uint pos, uint myrank);
 
@@ -45,12 +48,11 @@ inline void mariposa(scomplex *a, scomplex *b, uint wn){  scomplex d,aux,twf;
 
 void fft(scomplex *senal,scomplex *fft_res, uint n,uint nproc){
   uint  i, semi_n=n>>1;
-  uint len_bits, aux;
   float arg;
 
   nro_muestras_total=n;
   np_total = nproc;
-  len_bits = logbase2(nro_muestras_total);
+
   twiddle_factors = (scomplex*) malloc((n>>1)*sizeof(scomplex));
 
   for (i=0;i<(n>>1);i++){
@@ -72,44 +74,77 @@ void fft(scomplex *senal,scomplex *fft_res, uint n,uint nproc){
     for(i=0;i<semi_n;i++){ 
       mariposa(&senal[i], &senal[i+semi_n], i);
     }  
-    printf("ROOT.- Primera mitad procesada a %u (%u elementos)...\n",responsab(semi_n), semi_n);
+
+    printf("ROOT.- Listo. Enviando mitad procesada a %u (%u elementos)...\n",responsab(semi_n), semi_n);
     derivar_trabajo(senal+semi_n, semi_n, 2, responsab(semi_n), semi_n, 0);
 
     printf("ROOT.- Primera llamada a FFT...\n");
     dft(senal, semi_n, 2, 0, 0);  
 
+
     uint bloque = nro_muestras_total/np_total;
-
     printf("ROOT.- Esperando vectores (%u elementos c/u)...\n", bloque);
-
     MPI_Gather(senal, bloque, complex_MPI, senal, bloque, complex_MPI, ROOT, MPI_COMM_WORLD);
 
-    printf("ROOT.- Ordenando...\n");
-    scomplex interm;
-    for(i=0;i<n;i++){ 
-      aux = reversal_bit(i,len_bits);
-      fft_res[aux].re = senal[i].re;
-      fft_res[aux].im = senal[i].im;  
-    }
+    //printf("ROOT.- Ordenando...\n");
+    printf("ROOT.- Reenviando vector agrupado para ordenar...\n");
+    MPI_Bcast(senal, n, complex_MPI, ROOT, MPI_COMM_WORLD);
+
+
+    printf("ROOT.- Vector desordenado ya enviado. Ordenando...\n");
+    //ordenar_bit_reversal(senal, fft_res, n);
+
+    scomplex* fft_parc = (scomplex*) malloc((n/np_total)*sizeof(scomplex));
+    ordenar_bit_reversal1(senal, fft_parc, n, np_total, myrank);
+    printf("ROOT.- Vector parcial ordenado. Esperando demas vectores...\n");
+    MPI_Gather(fft_parc, bloque, complex_MPI, fft_res, bloque, complex_MPI, ROOT, MPI_COMM_WORLD);
 
     free(twiddle_factors);
-    printf("ROOT.- Listo.\n");
+    printf("ROOT.- Vectores recibidos y agrupados. Orden listo.\n");
   }else{
     fft_recibir_tarea();
-    //MPI_Recv(senal+semi_n, semi_n, complex_MPI, ROOT, 123, MPI_COMM_WORLD, &status);
-    // Recibir trama especial de tarea.
-    // Hacer FFT.
-    // Responder al ROOT.
+    printf("* %u.- Esperando datos para ordenar...\n", myrank);
+    scomplex* senal = (scomplex*) malloc(n*sizeof(scomplex));          
+    MPI_Bcast(senal, n, complex_MPI, ROOT, MPI_COMM_WORLD);
+    printf("* %u.- Datos recibidos. Ordenando...\n", myrank);
+    scomplex* fft_parc = (scomplex*) malloc((n/np_total)*sizeof(scomplex));
+    ordenar_bit_reversal1(senal, fft_parc, n, np_total, myrank);
+
+    uint bloque = nro_muestras_total/np_total;
+    printf("* %u.- Vector parcial ordenado. Enviando...\n", myrank);
+    MPI_Gather(fft_parc, bloque , complex_MPI, NULL, 0, complex_MPI, ROOT, MPI_COMM_WORLD);
+    printf("* %u.- Enviado el vector parcial con exito.\n", myrank);
+  }
+}
+
+
+void ordenar_bit_reversal(scomplex* senal, scomplex* fft_res, uint n){
+  scomplex interm;
+  uint len_bits, aux, i;
+
+  len_bits = logbase2(n);
+  for(i=0;i<n;i++){ 
+    aux = reversal_bit(i,len_bits);
+    fft_res[i].re = senal[aux].re;
+    fft_res[i].im = senal[aux].im;  
+  }
+}
+
+void ordenar_bit_reversal1(scomplex* senal, scomplex* fft_res, uint n, uint np, uint myrank){
+  scomplex interm;
+  uint len_bits, aux, i,j;
+  len_bits = logbase2(n);
+  for(i=responsab_ord(myrank),j=0;i < (uint)(nro_muestras_total/np_total);i++,j++){ 
+    aux = reversal_bit(i,len_bits);
+    fft_res[j].re = senal[aux].re;
+    fft_res[j].im = senal[aux].im;  
   }
 }
 
 
 void fft_recibir_tarea(){
-  uint aux, len, prof, dest, pos, orig;
-  
+  uint aux, len, prof, dest, pos, orig;  
   scomplex *vector_aux;
-
-
 
   printf("* %u.- Espero a recibir tarea...\n", myrank);
   MPI_Recv(&len, 1, MPI_UNSIGNED, MPI_ANY_SOURCE, 123, MPI_COMM_WORLD, &status);  /* Longitud.     */
@@ -119,10 +154,8 @@ void fft_recibir_tarea(){
   MPI_Recv(&orig, 1, MPI_UNSIGNED, MPI_ANY_SOURCE, 123, MPI_COMM_WORLD, &status); /* Origen.       */
 
   printf("* %u.- Recibida tarea (orig=%u prof=%u dest=%u pos=%u orig=%u).\n", myrank,orig,prof,dest,pos,orig);
-
   vector_aux = (scomplex*) malloc(len*sizeof(scomplex));
   MPI_Recv(vector_aux, len, complex_MPI, MPI_ANY_SOURCE, 123, MPI_COMM_WORLD, &status);  /* Origen.       */
-
 
   //printf("* %u.- Recibi datos con exito (verif=%5.9f). Calculando FFT...\n", myrank,calcular_suma_verif(len, vector_aux));
   printf("* %u.- Recibi datos con exito. Calculando FFT...\n", myrank);
@@ -183,22 +216,24 @@ void dft(scomplex *senal, uint mylen, uint profundidad, uint myrank, uint posici
   }
 }
 
-
+/* Realiza la derivación de tareas de
+ * la FFT, luego de una bifurcación.
+ */
 void derivar_trabajo(scomplex* senal, uint semi_len, uint profundidad, uint respons, uint pos, uint myrank){
-  /* Inicio comunicacion mediante MPI. */
+
   uint aux;
   //                 5               0        1                2                         3       4
   // DATOS PARA FFT: senal+semi_len  semi_len profundidad<<1   respons   posicion_segundo_hijo   //origen 
   printf("* %u.- Intentando derivar trabajo a %u...\n", myrank, respons);
 
+  /* Inicio comunicacion mediante MPI. */
   aux=semi_len;               MPI_Send(&aux, 1, MPI_UNSIGNED, respons, 123, MPI_COMM_WORLD); /* Longitud.     */
   aux=profundidad   ;         MPI_Send(&aux, 1, MPI_UNSIGNED, respons, 123, MPI_COMM_WORLD); /* Profundidad.  */
   aux=respons;                MPI_Send(&aux, 1, MPI_UNSIGNED, respons, 123, MPI_COMM_WORLD); /* Destino.      */
   aux=pos;                    MPI_Send(&aux, 1, MPI_UNSIGNED, respons, 123, MPI_COMM_WORLD); /* Posicion.     */     
   aux=myrank;                 MPI_Send(&aux, 1, MPI_UNSIGNED, respons, 123, MPI_COMM_WORLD); /* Origen.       */
-
   
-  MPI_Send(senal, semi_len, complex_MPI, respons, 123, MPI_COMM_WORLD);
+  MPI_Send(senal, semi_len, complex_MPI, respons, 123, MPI_COMM_WORLD);                      /* Vector.       */
   /* Fin comunicación mediante MPI. */  
 
   //printf("* %u.- Derive con exito el trabajo a %u (verif=%5.9f).\n", myrank, respons,  calcular_suma_verif(semi_len, senal));
@@ -206,6 +241,7 @@ void derivar_trabajo(scomplex* senal, uint semi_len, uint profundidad, uint resp
 }
 
 
+/* Calcula la suma de verificación de un vector complejo. */
 float calcular_suma_verif(uint semi_len, scomplex* senal){
   uint aux;
   float verif=0;
@@ -254,4 +290,15 @@ uint responsab(uint posic){
   myrank = posic / bloque_por_uP;
   //printf("   Solicitada resp. (posic=%u -> resp=%u).\n",posic,myrank);
   return myrank;
+}
+
+
+/* Establece la responsabilidad para un uP en el orden reverso.
+ * Retorna la posición del vector de muestras asociado al uP dado (myrank).
+ */
+uint responsab_ord(uint uP){  
+  uint posic;
+  uint bloque_por_uP = (uint)(nro_muestras_total/np_total);
+  posic = myrank* bloque_por_uP;
+  return posic;
 }
