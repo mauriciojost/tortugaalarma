@@ -116,8 +116,8 @@ El factor
 \begin{equation}
 	e^{-\frac{j2\pi}{N}} = \omega_N^{kn}
 \end{equation}
-es llamado \textit{phase factor}. 
-Este factor presenta periodicidad, y cierta simetría que no es aprovechada por DFT, pero sí por FFT. 
+es llamado \textit{phase factor}.
+Este factor presenta periodicidad, y cierta simetría que no es aprovechada por DFT, pero sí por FFT.
 \begin{itemize}
 \item Propiedad de simetría: $\omega_N^{k+N/2} = -\omega_N^{k}$
 \item Propiedad de periodicidad: $\omega_N^{k+N} = \omega_N^{k}$
@@ -136,7 +136,7 @@ pueda expresarse (definida por partes) de la siguiente manera:
     X_{(2k+1)} = \sum_{n=0}^{\frac{N}{2}-1}[x_{(n)} - x_{(n+\frac{N}{2})}], \quad k=0,1,\dots,\frac{N}{2}-1
 \end{equation}
 
-La aplicación de estas ecuaciones a un conjunto de muestras $x_{(n)}$ está representado en la figura (\ref{F:Etapas}). El proceso entero requiere $\log_2{N}$ etapas de decimación (DFT). 
+La aplicación de estas ecuaciones a un conjunto de muestras $x_{(n)}$ está representado en la figura (\ref{F:Etapas}). El proceso entero requiere $\log_2{N}$ etapas de decimación (DFT).
 
 La siguiente figura describe el sentido práctico de las ecuaciones (\ref{E:FFT1}) y (\ref{E:FFT2}).
 
@@ -166,7 +166,7 @@ Cada una de las etapas involucra $\frac{N}{2}$ mariposas del tipo mostrado en la
 \subsection{Recursividad y paralelismo en el algoritmo}
 \subsubsection{Recursividad}
 El algoritmo puede ser llevado a una forma recursiva. Así, en cada etapa, se realizan dos llamadas a la misma función
-de origen. Esta forma de escribir el algoritmo facilita mucho su abordaje conceptual. 
+de origen. Esta forma de escribir el algoritmo facilita mucho su abordaje conceptual.
 
 \bigskip
 \begin{figure}[htp]
@@ -180,11 +180,11 @@ de origen. Esta forma de escribir el algoritmo facilita mucho su abordaje concep
 Existen muchas implementaciones
 escritas en base a bucles, en búsqueda de eficiencia. Por desgracia estas son un tanto más difíciles de desglosar, y su
 paralelización requiere de un cuidado extremo. En el corriente trabajo se ha optado por algoritmos recursivos, que permiten
-divisar fácilmente la escencia de la idea sobre la cual fueron construidos. 
+divisar fácilmente la escencia de la idea sobre la cual fueron construidos.
 
 \subsubsection{Paralelismo}
 
-Como se puede observar en la figura (\ref{F:Etapas}), no existe dependencia entre dos bloques de datos luego de una bifurcación. Esto permite que los hilos o procesos que llevan a cabo las tareas para cada bloque, no requieran sincronizaciones tan frecuentes, o dicho de otra forma, presenten una granularidad alta de sincronización. Las condiciones de paralelismo de este algoritmo son favorables desde este punto de vista. 
+Como se puede observar en la figura (\ref{F:Etapas}), no existe dependencia entre dos bloques de datos luego de una bifurcación. Esto permite que los hilos o procesos que llevan a cabo las tareas para cada bloque, no requieran sincronizaciones tan frecuentes, o dicho de otra forma, presenten una granularidad alta de sincronización. Las condiciones de paralelismo de este algoritmo son favorables desde este punto de vista.
 
 Sin embargo, antes de la bifurcación, no es sencillo lograr procesamiento paralelo que brinde mejoras considerables. Esto es a causa de que en etapas iniciales, la granularidad es fina. La inter-dependencia de los datos es alta, lo cual hace necesario un algoritmo bastante más complejo que las coordine, y de una sobrecarga no menor.
 
@@ -219,6 +219,12 @@ $N_M$ es la longitud de la muestra (en coeficientes).\\
 
 \section{Mediciones}
 
+Este es el ejemplo:
+
+\begin{equation}
+    X_{1,2} = \frac{-b+\sqrt{(b^2 - 4ac)}}{2a}
+\end{equation}
+
 
 \begin{tabular}{lll}\hline
 Ciudad&País&Continente\\\hline
@@ -226,6 +232,8 @@ Bogotá&Colombia&América\\
 Peking&Japón&Asia\\
 París&Francia&Europa\\
 \end{tabular}
+
+
 
 
 
