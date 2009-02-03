@@ -8,8 +8,8 @@
 
 #define ROOT 0
 #define Ki 1024
-#define N Ki*Ki*16
-
+#define MiB Ki*Ki/16 // 16 MB son logrados con 1M muestras (1 cmplx -> 2 doubles -> 16 bytes).
+#define N MiB*16
 
 int main(int argc, char *argv[]){
   long n=N;
@@ -19,9 +19,6 @@ int main(int argc, char *argv[]){
   MPI_Datatype complex_MPI;
   scomplex *senal;
   scomplex *fft_res;
-  
-  
-
   
   
   MPI_Init(&argc, &argv);  
@@ -40,6 +37,11 @@ int main(int argc, char *argv[]){
     fft_res = (scomplex*) malloc(n*sizeof(scomplex));
   }
 
+  //printf("Detenido (%d).\n",myrank);getchar();
+
+
+
+
   //printf("* Iniciado el procesamiento de FFT (%d muestras).\n", n);
   //tiempo = clock();
   fft(senal, fft_res, n,nprocs);            /* Procesar FFT. El vector senal y fft_res sólo se usan en ROOT.*/
@@ -54,7 +56,7 @@ int main(int argc, char *argv[]){
   //printf("Listo! FFT tardo %d ciclos.\n",tiempo);
 
   
-  printf("Yo (%u) digo chau!!!\n", myrank);
+  printf("* %u.- Finalizado.\n", myrank);
   MPI_Finalize();  
   
   return 0;

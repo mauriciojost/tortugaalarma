@@ -5,7 +5,8 @@
 #include <mpi.h>
 #define ROOT 0
 
-//#define MPI_TAG_MUESTRAS 55
+#define MPI_TAG_MUESTRAS 55
+#define MPI_TAG_MUESTRAS 55
 
 /* Variables globales. No son modificadas luego de su asinación inicial. 
  * No representan problemas de concurrencia. 
@@ -13,19 +14,10 @@
 uint nro_muestras_total;  /* Cantidad de muestras a ser procesadas. Cumple nro=2^k (k entero).  */
 uint np_total;            /* Cantidad de procesadores a ser utilizados.                         */
 
-unsigned int nprocs, myrank;
-MPI_Status status;
+unsigned int myrank;
+
 MPI_Datatype complex_MPI;
-
-scomplex *vector2;
 scomplex *twiddle_factors;
-
-void fft_recibir_tarea();
-uint responsab_ord(uint uP);
-void ordenar_bit_reversal(scomplex* senal, scomplex* fft_res, uint n);
-void ordenar_bit_reversal1(scomplex* senal, scomplex* fft_res, uint n, uint np, uint myrank);
-float calcular_suma_verif(uint semi_len, scomplex* senal);
-void derivar_trabajo(scomplex* senal, uint semi_len, uint profundidad, uint respons, uint pos, uint myrank);
 
 inline void mariposa(scomplex *a, scomplex *b, uint wn){  scomplex d,aux,twf;
 
@@ -61,16 +53,13 @@ void fft(scomplex *senal,scomplex *fft_res, uint n,uint nproc){
 	  twiddle_factors[i].im = sin((double)arg);
   }
 
-
   MPI_Type_contiguous(2, MPI_DOUBLE, &complex_MPI);
   MPI_Type_commit(&complex_MPI);
   MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
-  MPI_Comm_size(MPI_COMM_WORLD, &nprocs);  
-
 
   if (myrank == ROOT){
 
-    printf("ROOT.- Calculando primera etapa...\n");
+    printf("\nROOT.- Calculando primera etapa...\n");
     for(i=0;i<semi_n;i++){ 
       mariposa(&senal[i], &senal[i+semi_n], i);
     }  
@@ -78,25 +67,23 @@ void fft(scomplex *senal,scomplex *fft_res, uint n,uint nproc){
     printf("ROOT.- Listo. Enviando mitad procesada a %u (%u elementos)...\n",responsab(semi_n), semi_n);
     derivar_trabajo(senal+semi_n, semi_n, 2, responsab(semi_n), semi_n, 0);
 
-    printf("ROOT.- Primera llamada a FFT...\n");
+    printf("\nROOT.- Primera llamada a FFT...\n");
     dft(senal, semi_n, 2, 0, 0);  
 
 
     uint bloque = nro_muestras_total/np_total;
-    printf("ROOT.- Esperando vectores (%u elementos c/u)...\n", bloque);
+    printf("\nROOT.- FFT parcial lista. Esperando vectores (%u elementos c/u)...\n", bloque);
     MPI_Gather(senal, bloque, complex_MPI, senal, bloque, complex_MPI, ROOT, MPI_COMM_WORLD);
 
     //printf("ROOT.- Ordenando...\n");
-    printf("ROOT.- Reenviando vector agrupado para ordenar...\n");
+    printf("\nROOT.- Vectores parciales recibidos. Reenviando vector agrupado para ordenar...\n");
     MPI_Bcast(senal, n, complex_MPI, ROOT, MPI_COMM_WORLD);
 
-
     printf("ROOT.- Vector desordenado ya enviado. Ordenando...\n");
-    //ordenar_bit_reversal(senal, fft_res, n);
 
     scomplex* fft_parc = (scomplex*) malloc((n/np_total)*sizeof(scomplex));
-    ordenar_bit_reversal1(senal, fft_parc, n, np_total, myrank);
-    printf("ROOT.- Vector parcial ordenado. Esperando demas vectores...\n");
+    ordenar_bit_reversal_parcial(senal, fft_parc, n, np_total, myrank);
+    printf("\nROOT.- Vector parcial ordenado. Esperando demas vectores...\n");
     MPI_Gather(fft_parc, bloque, complex_MPI, fft_res, bloque, complex_MPI, ROOT, MPI_COMM_WORLD);
 
     free(twiddle_factors);
@@ -108,29 +95,18 @@ void fft(scomplex *senal,scomplex *fft_res, uint n,uint nproc){
     MPI_Bcast(senal, n, complex_MPI, ROOT, MPI_COMM_WORLD);
     printf("* %u.- Datos recibidos. Ordenando...\n", myrank);
     scomplex* fft_parc = (scomplex*) malloc((n/np_total)*sizeof(scomplex));
-    ordenar_bit_reversal1(senal, fft_parc, n, np_total, myrank);
+    ordenar_bit_reversal_parcial(senal, fft_parc, n, np_total, myrank);
 
     uint bloque = nro_muestras_total/np_total;
     printf("* %u.- Vector parcial ordenado. Enviando...\n", myrank);
     MPI_Gather(fft_parc, bloque , complex_MPI, NULL, 0, complex_MPI, ROOT, MPI_COMM_WORLD);
     printf("* %u.- Enviado el vector parcial con exito.\n", myrank);
+    free(fft_parc);
   }
 }
 
 
-void ordenar_bit_reversal(scomplex* senal, scomplex* fft_res, uint n){
-  scomplex interm;
-  uint len_bits, aux, i;
-
-  len_bits = logbase2(n);
-  for(i=0;i<n;i++){ 
-    aux = reversal_bit(i,len_bits);
-    fft_res[i].re = senal[aux].re;
-    fft_res[i].im = senal[aux].im;  
-  }
-}
-
-void ordenar_bit_reversal1(scomplex* senal, scomplex* fft_res, uint n, uint np, uint myrank){
+void ordenar_bit_reversal_parcial(scomplex* senal, scomplex* fft_res, uint n, uint np, uint myrank){
   scomplex interm;
   uint len_bits, aux, i,j;
   len_bits = logbase2(n);
@@ -143,6 +119,7 @@ void ordenar_bit_reversal1(scomplex* senal, scomplex* fft_res, uint n, uint np, 
 
 
 void fft_recibir_tarea(){
+  MPI_Status status;
   uint aux, len, prof, dest, pos, orig;  
   scomplex *vector_aux;
 
@@ -164,7 +141,7 @@ void fft_recibir_tarea(){
   uint bloque = nro_muestras_total/np_total;
   MPI_Gather(vector_aux, bloque , complex_MPI, NULL, 0, complex_MPI, ROOT, MPI_COMM_WORLD);
   printf("* %u.- Envie resultado a ROOT con exito.\n", myrank);
-
+  free(vector_aux);
 }
 
 
@@ -175,15 +152,6 @@ void dft(scomplex *senal, uint mylen, uint profundidad, uint myrank, uint posici
   uint i, semi_len=mylen>>1;
   uint posicion_segundo_hijo, respons;
   
-  //printf("\nFFT entradas ->\n  * uP=%u/%d. Pos=%u ",myrank,np_total, posicion);
-  //printf("len=%u prof=%u\n  * Vector: ", mylen, profundidad);
-
-  //for(i=0;i<mylen;i++){
-    //printf("%1.2f+j%1.2f ", senal[i].re, senal[i].im);
-  //}
-  //printf("\n\n");
-
-
   if (mylen>1){ 
 
     /* Cálculo de la etapa actual. */
@@ -210,9 +178,7 @@ void dft(scomplex *senal, uint mylen, uint profundidad, uint myrank, uint posici
       //derivar_trabajo(senal+semi_n, semi_n, 2, responsab(semi_n), semi_n, 0);      
       derivar_trabajo(senal+semi_len, semi_len, profundidad<<1, respons, posicion_segundo_hijo, myrank);
     }
-
     dft(senal,   semi_len,profundidad<<1,myrank,posicion);
-        
   }
 }
 
@@ -220,7 +186,6 @@ void dft(scomplex *senal, uint mylen, uint profundidad, uint myrank, uint posici
  * la FFT, luego de una bifurcación.
  */
 void derivar_trabajo(scomplex* senal, uint semi_len, uint profundidad, uint respons, uint pos, uint myrank){
-
   uint aux;
   //                 5               0        1                2                         3       4
   // DATOS PARA FFT: senal+semi_len  semi_len profundidad<<1   respons   posicion_segundo_hijo   //origen 
@@ -240,7 +205,6 @@ void derivar_trabajo(scomplex* senal, uint semi_len, uint profundidad, uint resp
   printf("* %u.- Derive con exito el trabajo a %u.\n", myrank, respons);
 }
 
-
 /* Calcula la suma de verificación de un vector complejo. */
 float calcular_suma_verif(uint semi_len, scomplex* senal){
   uint aux;
@@ -250,7 +214,6 @@ float calcular_suma_verif(uint semi_len, scomplex* senal){
   }
   return verif;
 }
-
 
 
 /* Algoritmo de bit-reverso. 
