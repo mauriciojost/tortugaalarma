@@ -1,23 +1,33 @@
 \documentclass[12pt,a4paper,final,onecolumn]{article}
 
+
 \usepackage[ansinew]{inputenc}
 \usepackage[spanish,activeacute]{babel}
+\usepackage{fancyhdr}                      %Paquete para gestionar
 
 \usepackage{color}
 \usepackage{graphicx}
 \usepackage{anysize}
+\usepackage[T1]{fontenc}
+
+
+%avant, avantgar, bookman, chancery, charter, courier, helvet, helvetic, ncntrsbk, newcent, palatcm, palatino, pifont, %times, utopia, zapfchan. Modo de uso: \usepackage{avant}, etc.
+
+%\usepackage{charter}
+
+\usepackage{emerald}
+\usepackage{utopia}
+
 
 \usepackage[dvipdfm,bookmarks=true,bookmarksnumbered=true,
  pdfkeywords={TeX; dvipdfmx; hyperref; color;},%
  colorlinks=true,linkcolor=blue]{hyperref}
 
-%\usepackage{hyperref}
 
 
 
 % Encabezado.
 %\marginsize{2cm}{2cm}{2cm}{2cm}                            % Márgenes -> izq, der, sup, inf.
-\newcommand{\piRsquare}{\pi r^2}                            % Nuevo macro.
 \title{Transformada Rápida de Fourier con Paralelismo}      % Usado por \maketitle.
 \author{Mauricio Jost}                                      % Usado por \maketitle.
 \date{2009}                                                 % Usado por \maketitle.
@@ -26,12 +36,14 @@
 % Cuerpo.
 \begin{document}
 
-
-
 \pagestyle{empty}
+
+
 %\maketitle     % Escribe el título.
 \begin{center}
 % Uso de tamaños (mediante ambientes): small, normalsize, large, Large y LARGE.
+
+        
 
 \begin{LARGE}
 \bigskip\bigskip\bigskip\bigskip    % Espacios grandes.
@@ -61,21 +73,26 @@ UNC
 \bigskip\bigskip\bigskip
 2009\\
 \end{large}
-
-
-
-
-
-
-
 \end{center}
 \newpage                                                    % Nueva página.
 
+\fancypagestyle{plain}
+{
+    \fancyhf{}
+    \fancyhead[R]{\bfseries \rightmark}
+    \fancyhead[LE]{\bfseries \leftmark}
+    \fancyhead[LO]{\ECFTeenSpirit Mauricio G. Jost}         %Encabezado
+    \fancyfoot[C]{\bfseries \thepage}       %Pie de página
+    
+    \renewcommand{\headrulewidth}{1pt}      %Linea en el encabezado
+    \renewcommand{\footrulewidth}{1pt}      %Linea en el pie de pagina.
+}
+
 \pagestyle{plain}
 
-\newpage
+
 \tableofcontents
-%\url{http://www.wikibooks.org}
+
 
 \newpage
 
@@ -123,7 +140,7 @@ como Verilog o VHDL.
 No es intención del autor lograr la máxima eficiencia para un sistema dado, sino lograr un
 algoritmo que tenga buena respuesta general, en cualquier sistema multiprocesador moderno.
 
-\subsection{Breve introducción a la implementación de FFT}
+\subsection{Implementación de FFT}
 Para el procesamiento de N muestras $x_{(n)}$ (N debe ser potencia de 2), se tiene
 la siguiente ecuación para la obtención de su DFT:
 
@@ -155,7 +172,7 @@ pueda expresarse (definida por partes) de la siguiente manera:
     X_{(2k+1)} = \sum_{n=0}^{\frac{N}{2}-1}[x_{(n)} - x_{(n+\frac{N}{2})}], \quad k=0,1,\dots,\frac{N}{2}-1
 \end{equation}
 
-La aplicación de estas ecuaciones a un conjunto de muestras $x_{(n)}$ está representado en la Figura \ref{F:Etapas}. El proceso entero requiere $\log_2{N}$ etapas de decimación (DFT).
+La aplicación de estas ecuaciones a un conjunto de muestras $x_{(n)}$ está representado en la Figura \ref{F:Etapas}. El proceso entero requiere $\log_2{N}$ etapas de diezmado (DFT).
 
 La siguiente Figura describe el sentido práctico de las ecuaciones \ref{E:FFT1} y \ref{E:FFT2}.
 
@@ -181,7 +198,7 @@ Cada una de las etapas involucra $\frac{N}{2}$ mariposas del tipo mostrado en la
 \includegraphics[scale=0.50]{mariposa.jpg}
 \caption{
 \small
-Mariposa para decimación en frecuencia. Constituye el bloque básico para el algoritmo de FFT.}
+Mariposa para diezmado en frecuencia. Constituye el bloque básico para el algoritmo de FFT.}
 \label{F:Mariposa}
 \end{figure}
 \bigskip
@@ -191,16 +208,14 @@ El algoritmo puede ser llevado a una forma recursiva. Así, en cada etapa, se rea
 de origen. Esta forma de escribir el algoritmo facilita mucho su abordaje conceptual.
 
 \bigskip
-
 \begin{figure}[htp]
 \centering
 \includegraphics[scale=0.65]{recursividad.jpg}
 \caption{
 \small
-Recursividad de FFT con decimación en frecuencia. Ejemplo con vector de 8 muestras.}
+Recursividad de FFT con diezmado en frecuencia. Ejemplo con vector de 8 muestras.}
 \label{F:Recursividad}
 \end{figure}
-
 \bigskip
 
 Existen muchas implementaciones escritas en base a bucles, en búsqueda de eficiencia. Por desgracia estas son un tanto más difíciles de desglosar, y su paralelización requiere de un cuidado extremo. En el corriente trabajo se ha optado por algoritmos recursivos, que permiten divisar fácilmente la esencia de la idea sobre la cual fueron construidos.
@@ -220,13 +235,13 @@ Sin embargo, antes de la bifurcación, no es sencillo lograr procesamiento parale
 En este trabajo se ha optado por buscar la eficiencia desde la simpleza y la casi nula sobrecarga de sincronización. Esto implica que el algoritmo no es capaz de distribuir el trabajo entre una cantidad arbitraria de procesadores, sino únicamente para una cantidad $N_p$ donde $N_p = 2^v$ con $v$ entero (en otras palabras, $N_p$ debe ser potencia de 2). De esta forma, se puede distribuir los trabajos sin una sobrecarga considerable, y hacer que cada tarea tenga un grado de dependencia muy bajo respecto de su tarea par, aquella que surgió de la misma bifurcación. También se logra un
 balance de carga que mejora con el aumento de la cantidad de muestras. Esto puede apreciarse en la Figura \ref{F:balance_ejemplo}, presente en las secciones siguientes.
 
-En la Figura \ref{F:Etapas} se puede ver que es necesario luego de la última etapa de DFT, realizar un reordenamiento de los datos antes de presentarlos. El método que permite obtener la secuencia de índices es el \textit{Bit Reversal}. El ordenamiento en sí, puede consumir un tiempo importante, y es por ello que se ha optado por paralelizar también su ejecución. 
+En la Figura \ref{F:Etapas} se puede ver que es necesario luego de la última etapa de DFT, realizar un reordenamiento de los datos antes de presentarlos. El método que permite obtener la secuencia de índices es el \textit{Bit Reversal}. El ordenamiento en sí, puede consumir un tiempo importante, y es por ello que se ha optado por paralelizar también su ejecución.
 
 \subsubsection{\textit{Bit Reversal} con Paralelismo}
 
-El método utilizado para lograr una ejecución más rápida del algoritmo de ordenamiento es sencillo. Consiste en 
-agrupar los datos desordenados (u ordenados de una forma no útil) luego de todas las etapas de DFT, y volver a distribuirlos para que cada procesador reordene una parte determinada del bloque final. 
-Cada procesador tomará datos de todo el conjunto desordenado, según su propio cálculo de \textit{Bit Reversal}, 
+El método utilizado para lograr una ejecución más rápida del algoritmo de ordenamiento es sencillo. Consiste en
+agrupar los datos desordenados (u ordenados de una forma no útil) luego de todas las etapas de DFT, y volver a distribuirlos para que cada procesador reordene una parte determinada del bloque final.
+Cada procesador tomará datos de todo el conjunto desordenado, según su propio cálculo de \textit{Bit Reversal},
 y los agrupará en un bloque que, agrupado de forma contigua con el resto de los bloques procesados por el resto
 de los procesadores, resultará en el bloque final con el orden deseado.
 
@@ -261,28 +276,61 @@ La siguiente Figura muestra un ejemplo.
 \bigskip
 \begin{figure}[htp]
 \centering
-\includegraphics[scale=0.65]{balance_16_4.jpg}
+\includegraphics[scale=0.65]{balance_16_4_.jpg}
 \caption{
 \small
-Ejemplo de balance de carga para el caso de $N_p=4$ y  $N_{muestras}=16$. Con 
-color más oscuro se pueden observar las asignaciones al proceso \textit{root}. 
+Ejemplo de balance de carga para el caso de $N_p=4$ y  $N_{muestras}=16$. Con
+color más oscuro se pueden observar las asignaciones al proceso \textit{root}.
 Cada círculo representa un dato calculado por el procesador indicado.}
 \label{F:balance_ejemplo}
 \end{figure}
 \bigskip
 
 
-Nótese en la Figura \ref{F:balance_ejemplo} que el algoritmo es imparcial al inicio. 
+Nótese en la Figura \ref{F:balance_ejemplo} que el algoritmo es imparcial al inicio.
 A medida que se avanza en las etapas la carga es mejor balanceada.
 Al momento de alcanzar la unidad mínima de distribución de trabajo ($\frac{N_{muestras}}{N_p} = 4$ para el ejemplo)
 el trabajo deja de distribuirse, y cada procesador continua con la totalidad de las DFT asociadas al sub-bloque, y a sus sub-bloques.
 
 
 \section{Mediciones}
+Las mediciones tomadas muestran tiempos para diferentes tamaños de vector, y para diferente cantidad de procesadores.
+
+\begin{table}[ht]
+\centering
+\begin{center}
+  \begin{tabular}{|c|c|c|c|c|c|}
+    \hline
+            & 1M & 2M & 4M & 8M & 16M \\
+    \hline
+    1 uP    & 1  & 1  & 1  & 1  &   1 \\
+    2 uP    & 1  & 1  & 1  & 1  &   1 \\
+    \hline
+  \end{tabular}
+\end{center}
+\small
+\caption{Mediciones}
+\label{T:Tabla_mediciones}
+\end{table}
 
 
+\newpage
+\begin{thebibliography}{9}
 
+\bibitem{B:Wikipedia} Wikipedia, \emph{Fast Fourier transform}, \url{http://en.wikipedia.org/wiki/Fast_Fourier_transform}.
 
+\bibitem {B:Mohammed} Carleton University, Mohammed Aboul-Magd, \emph{Recursive Fast Fourier Transform Algorithm}, \url{http://www.scs.carleton.ca/~maheshwa/courses/5703COMP/Seminar08/mohammed-reprt.pdf}. Pg. 5.
+
+\bibitem{B:Taiwan} National Taiwan University, \emph{Fast Fourier Transform (FFT)}, \url{http://www.cmlab.csie.ntu.edu.tw/cml/dsp/training/coding/transform/fft.html}.
+
+\bibitem{B:Recurs} FSU Computer Science, \emph{Efficient FFT Implementations},
+\url{http://www.cs.fsu.edu/~cop4531/slideshow/chapter32/32-3.html}.
+
+\bibitem{B:Proakis} Proakis, J. G. y Manolakis, D. G., 2003. \emph{Tratamiento Digital de Señales}. Tercera Edición. Prentice Hall. Madrid.
+
+\bibitem{B:CatDSP} Cátedra de DSP - FCEFyN (UNC). Apunte \emph{Transformada de Fourier y el Algoritmo FFT}, \url{http://www.dsp.efn.unc.edu.ar/documentos/FFT.pdf}.
+
+\end{thebibliography}
 
 
 
