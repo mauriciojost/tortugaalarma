@@ -13,6 +13,6 @@ uint responsab(uint posic);
 uint responsab_ord(uint uP);
 uint reversal_bit(uint a, uint n_bits);
 uint logbase2(uint arg);
-float calcular_suma_verif(uint semi_len, scomplex* senal);
+double calcular_suma_verif(uint semi_len, scomplex* s);
 
 #endif //ACC_FFT_H

@@ -80,13 +80,13 @@ inline void mariposa(scomplex *a, scomplex *b, uint wn){  scomplex d,aux,twf;
 
 
 /* Calcula la suma de verificación de un vector complejo. */
-float calcular_suma_verif(uint semi_len, scomplex* senal){
+double calcular_suma_verif(uint semi_len, scomplex* s){
   uint aux;
-  float verif=0;
+  double verific=0;
   for(aux=0;aux<semi_len;aux++){
-    verif+= (senal[aux].re + senal[aux].im);
+    verific+= (s[aux].re + s[aux].im);
   }
-  return verif;
+  return verific;
 }
 
 
