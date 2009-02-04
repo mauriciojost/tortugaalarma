@@ -10,7 +10,9 @@
 #define ROOT 0
 #define Ki 1024
 #define MiB Ki*Ki/16 // 16 MB son logrados con 1M muestras (1 cmplx -> 2 doubles -> 16 bytes).
-#define N MiB*64
+//#define N MiB*64
+#define N 8
+
 
 int main(int argc, char *argv[]){
   long n=N;
@@ -46,9 +48,13 @@ int main(int argc, char *argv[]){
   
   if (myrank == ROOT){
     tiempo = clock() - tiempo;
-    printf("ROOT.- Listo! FFT tardo %f segundos.\n",(double)tiempo/(double)CLOCKS_PER_SEC);
+    printf("ROOT.- Listo! FFT tardo %f segundos (CLOCKS_PER_SEC=%u).\n",(double)tiempo/(double)CLOCKS_PER_SEC,(uint)CLOCKS_PER_SEC);
     free(senal);    
     imprimir_maximo_modulo(fft_res, n, fs);
+
+    FILE* fp = (FILE*) abrir_archivo_out("fft.txt");
+    escribir_fft_archivo_y_cerrar(fp,fft_res,n,fs);
+    
     free(fft_res);
   }
     
