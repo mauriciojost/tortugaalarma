@@ -2,8 +2,8 @@ CC = mpicc
 FLAGS = -lm
 
 # Makefile
-fft : main.o fft.o complejo.o archivo.o
-	$(CC) $(FLAGS) -Wall main.o fft.o complejo.o archivo.o -offt
+fft : main.o fft.o complejo.o archivo.o acc_fft.o
+	$(CC) $(FLAGS) -Wall main.o fft.o complejo.o archivo.o acc_fft.o -offt
 	rm -f *.o
 
 main.o : main.c
@@ -18,7 +18,10 @@ complejo.o : complejo.c
 archivo.o : archivo.c
 	$(CC) -c archivo.c
 
-clean: 
+acc_fft.o : acc_fft.c
+	$(CC) -c acc_fft.c
+
+clean:
 	rm -f *.o *~ fft *.out *.txt
 
 all:
