@@ -10,7 +10,7 @@
 #define ROOT 0
 #define Ki 1024
 #define MiB Ki*Ki/16 // 16 MB son logrados con 1M muestras (1 cmplx -> 2 doubles -> 16 bytes).
-#define N MiB*256
+#define N MiB*64
 
 int main(int argc, char *argv[]){
   long n=N;
@@ -22,8 +22,6 @@ int main(int argc, char *argv[]){
 
 
   MPI_Init(&argc, &argv);  
-
-
   MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
   MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 

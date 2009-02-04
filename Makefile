@@ -24,8 +24,12 @@ acc_fft.o : acc_fft.c
 clean:
 	rm -f *.o *~ fft *.out *.txt
 
+run:
+	mpirun -np 2 ./fft
+
 all:
 	make clean
 	make
+	make run
 	echo "**************************************************"
-	mpirun -np 2 ./fft
+	

@@ -11,7 +11,7 @@ struct complex
 };
 
 typedef struct complex scomplex;
-
+typedef unsigned int uint;
 
 void cargar_vector_complejo(struct complex vector[], int n, float fs, float f);
 void imprimir_vector_complejo(struct complex vector[], int n);
