@@ -3,9 +3,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "complejo.h"
-#define FORMATO_EN_ARCHIVO     "%2.5f + j%2.5f\n"
-#define FORMATO_EN_ARCHIVO_FFT "%f1.1Hz -> %2.5f + j%2.5f\n"
-#define FORMATO_EN_ARCHIVO_MODFFT "%f1.1Hz -> %2.5f\n"
+#define FORMATO_EN_ARCHIVO     "%2.2f+j*%2.2f\n"
+#define FORMATO_EN_ARCHIVO_FFT "%1.1fHz-> %2.2f+j*%2.2f\n"
+#define FORMATO_EN_ARCHIVO_MODFFT "%1.1fHz-> %2.2f\n"
 
 FILE* abrir_archivo_in(char *nombre);
 FILE* abrir_archivo_out(char *nombre);
