@@ -9,4 +9,5 @@ del *.log
 del *.toc
 del *.bbl
 del *.blg
+del *.out
 cmd

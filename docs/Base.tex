@@ -2,20 +2,32 @@
 
 \usepackage[ansinew]{inputenc}
 \usepackage[spanish,activeacute]{babel}
+
 \usepackage{color}
 \usepackage{graphicx}
 \usepackage{anysize}
 
+\usepackage[dvipdfm,bookmarks=true,bookmarksnumbered=true,
+ pdfkeywords={TeX; dvipdfmx; hyperref; color;},%
+ colorlinks=true,linkcolor=blue]{hyperref}
+
+%\usepackage{hyperref}
+
+
+
 % Encabezado.
 %\marginsize{2cm}{2cm}{2cm}{2cm}                            % Márgenes -> izq, der, sup, inf.
 \newcommand{\piRsquare}{\pi r^2}                            % Nuevo macro.
-\title{Transformada Rápida de Fourier Paralelizada}         % Usado por \maketitle.
+\title{Transformada Rápida de Fourier con Paralelismo}      % Usado por \maketitle.
 \author{Mauricio Jost}                                      % Usado por \maketitle.
 \date{2009}                                                 % Usado por \maketitle.
 
 
 % Cuerpo.
 \begin{document}
+
+
+
 \pagestyle{empty}
 %\maketitle     % Escribe el título.
 \begin{center}
@@ -25,7 +37,7 @@
 \bigskip\bigskip\bigskip\bigskip    % Espacios grandes.
 Trabajo Práctico Final\\
 \bigskip\bigskip
-\textbf{Transformada Rápida de Fourier Paralelizada}\\
+\textbf{Transformada Rápida de Fourier con Paralelismo}\\
 \bigskip\bigskip
 \end{LARGE}
 
@@ -34,8 +46,9 @@ Trabajo Práctico Final\\
 
 \begin{figure}[htp]
 \centering
-\includegraphics[scale=0.5]{UNC}
+\includegraphics[scale=0.4]{UNC.jpg}
 \end{figure}
+
 \begin{normalsize}
 Facultad de Ciencias Exactas, Físicas y Naturales\\
 UNC
@@ -60,10 +73,16 @@ UNC
 
 \pagestyle{plain}
 
+\newpage
+\tableofcontents
+%\url{http://www.wikibooks.org}
+
+\newpage
+
 \setcounter{page}{1}
 \section{Introducción}
 
-Los algoritmos de implementación de FFT son múltiples, y existen tantos como cantidad
+Los algoritmos de FFT son múltiples, y existen tantos como cantidad
 de arquitecturas de computadoras. El presente trabajo pretende realizar la implementación
 del mismo, pero no haciendo hincapié en recursos específicos de determinada
 arquitectura, sino en características más bien generales, presentes en casi todos los
@@ -101,7 +120,7 @@ o Fortran, pasando por implementaciones en ensamblador (las más habituales, orie
 específicamente a procesadores DSP), y hasta implementaciones en hardware, con lenguajes
 como Verilog o VHDL.
 
-No es intensión del autor lograr la máxima eficiencia para un sistema dado, sino lograr un
+No es intención del autor lograr la máxima eficiencia para un sistema dado, sino lograr un
 algoritmo que tenga buena respuesta general, en cualquier sistema multiprocesador moderno.
 
 \subsection{Breve introducción a la implementación de FFT}
@@ -124,7 +143,7 @@ Este factor presenta periodicidad, y cierta simetría que no es aprovechada por D
 \end{itemize}
 Este hecho permite que la cantidad total de multiplicaciones y sumas necesarias para el resultado final, disminuya.
 
-Como consecuencia final de la utilización de estas propiedades, se obtiene que la ecuación (\ref{E:DFT})
+Como consecuencia final de la utilización de estas propiedades, se obtiene que la Ecuación \ref{E:DFT}
 pueda expresarse (definida por partes) de la siguiente manera:
 
 \begin{equation}
@@ -136,60 +155,80 @@ pueda expresarse (definida por partes) de la siguiente manera:
     X_{(2k+1)} = \sum_{n=0}^{\frac{N}{2}-1}[x_{(n)} - x_{(n+\frac{N}{2})}], \quad k=0,1,\dots,\frac{N}{2}-1
 \end{equation}
 
-La aplicación de estas ecuaciones a un conjunto de muestras $x_{(n)}$ está representado en la figura (\ref{F:Etapas}). El proceso entero requiere $\log_2{N}$ etapas de decimación (DFT).
+La aplicación de estas ecuaciones a un conjunto de muestras $x_{(n)}$ está representado en la Figura \ref{F:Etapas}. El proceso entero requiere $\log_2{N}$ etapas de decimación (DFT).
 
-La siguiente figura describe el sentido práctico de las ecuaciones (\ref{E:FFT1}) y (\ref{E:FFT2}).
+La siguiente Figura describe el sentido práctico de las ecuaciones \ref{E:FFT1} y \ref{E:FFT2}.
 
 
 \bigskip
 \begin{figure}[htp]
 \centering
-\includegraphics[scale=0.45]{etapas}
-\caption{Etapas de la FFT ($N=8$).}
+\includegraphics[scale=0.45]{etapas.jpg}
+\caption{
+\small
+Etapas de la FFT ($N=8$).}
 \label{F:Etapas}
 \end{figure}
 \bigskip
 
 
-Cada una de las etapas involucra $\frac{N}{2}$ mariposas del tipo mostrado en la figura (\ref{F:Mariposa}).
+Cada una de las etapas involucra $\frac{N}{2}$ mariposas del tipo mostrado en la Figura (\ref{F:Mariposa}).
 
 
 \bigskip
 \begin{figure}[htp]
 \centering
-\includegraphics[scale=0.65]{mariposa}
-\caption{Mariposa para decimación en frecuencia.}
+\includegraphics[scale=0.50]{mariposa.jpg}
+\caption{
+\small
+Mariposa para decimación en frecuencia. Constituye el bloque básico para el algoritmo de FFT.}
 \label{F:Mariposa}
 \end{figure}
 \bigskip
 
-\subsection{Recursividad y paralelismo en el algoritmo}
-\subsubsection{Recursividad}
+\subsection{Recursividad}
 El algoritmo puede ser llevado a una forma recursiva. Así, en cada etapa, se realizan dos llamadas a la misma función
 de origen. Esta forma de escribir el algoritmo facilita mucho su abordaje conceptual.
 
 \bigskip
+
 \begin{figure}[htp]
 \centering
-\includegraphics[scale=0.65]{recursividad}
-\caption{Recursividad de FFT con decimación en frecuencia.}
+\includegraphics[scale=0.65]{recursividad.jpg}
+\caption{
+\small
+Recursividad de FFT con decimación en frecuencia. Ejemplo con vector de 8 muestras.}
 \label{F:Recursividad}
 \end{figure}
+
 \bigskip
 
-Existen muchas implementaciones
-escritas en base a bucles, en búsqueda de eficiencia. Por desgracia estas son un tanto más difíciles de desglosar, y su
-paralelización requiere de un cuidado extremo. En el corriente trabajo se ha optado por algoritmos recursivos, que permiten
-divisar fácilmente la escencia de la idea sobre la cual fueron construidos.
+Existen muchas implementaciones escritas en base a bucles, en búsqueda de eficiencia. Por desgracia estas son un tanto más difíciles de desglosar, y su paralelización requiere de un cuidado extremo. En el corriente trabajo se ha optado por algoritmos recursivos, que permiten divisar fácilmente la esencia de la idea sobre la cual fueron construidos.
+En la Figura \ref{F:Recursividad} se puede observar el conjunto de llamadas a una función recursiva DFT.
 
-\subsubsection{Paralelismo}
+Notar que en cada etapa se produce una bifurcación de los datos a nivel de dependencias entre ellos. Esto se ha utilizado para generar paralelismo de grano grueso de sincronización. También es importante destacar que una vez logrado el último nivel de recursividad, los datos requieren de un ordenamiento especial antes de ser reagrupados.
 
-Como se puede observar en la figura (\ref{F:Etapas}), no existe dependencia entre dos bloques de datos luego de una bifurcación. Esto permite que los hilos o procesos que llevan a cabo las tareas para cada bloque, no requieran sincronizaciones tan frecuentes, o dicho de otra forma, presenten una granularidad alta de sincronización. Las condiciones de paralelismo de este algoritmo son favorables desde este punto de vista.
+\subsection{Paralelismo}
 
-Sin embargo, antes de la bifurcación, no es sencillo lograr procesamiento paralelo que brinde mejoras considerables. Esto es a causa de que en etapas iniciales, la granularidad es fina. La inter-dependencia de los datos es alta, lo cual hace necesario un algoritmo bastante más complejo que las coordine, y de una sobrecarga no menor.
 
-En este trabajo se ha optado por buscar la eficiencia desde la simpleza y la casi nula sobrecarga de sincronización.
+Como se puede observar en la Figura \ref{F:Etapas}, no existe dependencia entre dos bloques de datos luego de una bifurcación. Esto permite que los hilos o procesos que llevan a cabo las tareas para cada bloque, no requieran sincronizaciones tan frecuentes, o dicho de otra forma, presenten una granularidad alta de sincronización. Las condiciones de paralelismo de este algoritmo son favorables desde este punto de vista.
 
+Sin embargo, antes de la bifurcación, no es sencillo lograr procesamiento paralelo que brinde mejoras considerables. Esto es a causa de que en etapas iniciales, la granularidad es fina. La interdependencia de los datos es alta, lo cual hace necesario un algoritmo bastante más complejo que las coordine, y de una sobrecarga no menor.
+
+\subsubsection{Etapas de DFT con Paralelismo}
+
+En este trabajo se ha optado por buscar la eficiencia desde la simpleza y la casi nula sobrecarga de sincronización. Esto implica que el algoritmo no es capaz de distribuir el trabajo entre una cantidad arbitraria de procesadores, sino únicamente para una cantidad $N_p$ donde $N_p = 2^v$ con $v$ entero (en otras palabras, $N_p$ debe ser potencia de 2). De esta forma, se puede distribuir los trabajos sin una sobrecarga considerable, y hacer que cada tarea tenga un grado de dependencia muy bajo respecto de su tarea par, aquella que surgió de la misma bifurcación. También se logra un
+balance de carga que mejora con el aumento de la cantidad de muestras. Esto puede apreciarse en la Figura \ref{F:balance_ejemplo}, presente en las secciones siguientes.
+
+En la Figura \ref{F:Etapas} se puede ver que es necesario luego de la última etapa de DFT, realizar un reordenamiento de los datos antes de presentarlos. El método que permite obtener la secuencia de índices es el \textit{Bit Reversal}. El ordenamiento en sí, puede consumir un tiempo importante, y es por ello que se ha optado por paralelizar también su ejecución. 
+
+\subsubsection{\textit{Bit Reversal} con Paralelismo}
+
+El método utilizado para lograr una ejecución más rápida del algoritmo de ordenamiento es sencillo. Consiste en 
+agrupar los datos desordenados (u ordenados de una forma no útil) luego de todas las etapas de DFT, y volver a distribuirlos para que cada procesador reordene una parte determinada del bloque final. 
+Cada procesador tomará datos de todo el conjunto desordenado, según su propio cálculo de \textit{Bit Reversal}, 
+y los agrupará en un bloque que, agrupado de forma contigua con el resto de los bloques procesados por el resto
+de los procesadores, resultará en el bloque final con el orden deseado.
 
 \subsection{Balance de carga}
 
@@ -198,8 +237,8 @@ En el momento en que todas las mariposas de una cierta etapa han sido calculadas
 resultante (de dos), a diferentes procesos. La regla a seguir es sencilla:
 
 \begin{enumerate}
-\item Siempre parte con el conjunto de mariposas de la etapa 1° el proceso ROOT.
-\item Llegado el momento de la bifurcación, se reasignan tareas. El bloque superior (siguiendo la figura (\ref{F:Etapas})) se mantiene en el proceso actual.
+\item Siempre parte con el conjunto de mariposas de la etapa 1° el proceso \textit{root}.
+\item Llegado el momento de la bifurcación, se reasignan tareas. El bloque superior (siguiendo la Figura \ref{F:Etapas}) se mantiene en el proceso actual.
     El bloque inferior, en caso de haber aún procesos ociosos, es asignado a uno de ellos. La regla de asignación está asociada a la correspondencia que tiene cierto proceso, a cierto \textit{bloque básico de asignación}\footnote{Ejemplo: se desea conocer el procesador asignado al bloque con inicio en 192. En caso de tener $N_P=8$ procesadores y $N_M=256$ muestras, la regla asigna al bloque con inicio en 192 el procesador $192\frac{N_P}{N_M} = 192\frac{8}{256} = 6$.}.
 \item Una vez que se han ocupado todos los procesos existentes, las asignaciones permanecen sin modificación.
 \end{enumerate}
@@ -217,32 +256,35 @@ $B_{inicio}$ es el punto inicial del bloque.\\
 $N_P$ es la cantidad de procesos.\\
 $N_M$ es la longitud de la muestra (en coeficientes).\\
 
+La siguiente Figura muestra un ejemplo.
+
+\bigskip
+\begin{figure}[htp]
+\centering
+\includegraphics[scale=0.65]{balance_16_4.jpg}
+\caption{
+\small
+Ejemplo de balance de carga para el caso de $N_p=4$ y  $N_{muestras}=16$. Con 
+color más oscuro se pueden observar las asignaciones al proceso \textit{root}. 
+Cada círculo representa un dato calculado por el procesador indicado.}
+\label{F:balance_ejemplo}
+\end{figure}
+\bigskip
+
+
+Nótese en la Figura \ref{F:balance_ejemplo} que el algoritmo es imparcial al inicio. 
+A medida que se avanza en las etapas la carga es mejor balanceada.
+Al momento de alcanzar la unidad mínima de distribución de trabajo ($\frac{N_{muestras}}{N_p} = 4$ para el ejemplo)
+el trabajo deja de distribuirse, y cada procesador continua con la totalidad de las DFT asociadas al sub-bloque, y a sus sub-bloques.
+
+
 \section{Mediciones}
 
-Este es el ejemplo:
-
-\begin{equation}
-    X_{1,2} = \frac{-b+\sqrt{(b^2 - 4ac)}}{2a}
-\end{equation}
-
-
-\begin{tabular}{lll}\hline
-Ciudad&País&Continente\\\hline
-Bogotá&Colombia&América\\
-Peking&Japón&Asia\\
-París&Francia&Europa\\
-\end{tabular}
 
 
 
 
 
-\newpage
 
-\tableofcontents
-
-\newpage
-
-\listoffigures
 
 \end{document}             % End of document.

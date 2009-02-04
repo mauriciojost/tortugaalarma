@@ -1,3 +1,3 @@
-texify base.tex
-dvipdft base.dvi
+texify --pdf base.tex
+echo dvipdft base.dvi
 cmd
