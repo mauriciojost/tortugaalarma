@@ -6,14 +6,7 @@
 #define ROOT 0
 
 #define MPI_TAGMUE 123
-#define MPI_TAGLEN 543
-#define MPI_TAGPRO 332
-#define MPI_TAGDES 631
-#define MPI_TAGPOS 416
-#define MPI_TAGORI 756
 #define MPI_TAGPARAM 757
-
-
 
 /* Variables globales. No son modificadas luego de su asinación inicial. 
  * No representan problemas de concurrencia. 
@@ -48,8 +41,6 @@ void fft(scomplex *senal,scomplex *fft_res, uint n,uint nproc){
   if (myrank == ROOT){
     /**** Proceso ROOT. ****/
 
-    
-
     printf("\nROOT.- Calculando primera etapa...\n");
     for(i=0;i<semi_n;i++){ 
       mariposa(&senal[i], &senal[i+semi_n], i);
@@ -64,7 +55,6 @@ void fft(scomplex *senal,scomplex *fft_res, uint n,uint nproc){
     dft(senal, semi_n, 2, 0, 0);  
     
     if (nproc!=1){
-
       uint bloque = nro_muestras_total/np_total;
       printf("\nROOT.- FFT parcial lista. Esperando vectores (%u elementos c/u)...\n", bloque);
       MPI_Gather(senal, bloque, complex_MPI, senal, bloque, complex_MPI, ROOT, MPI_COMM_WORLD);
@@ -82,8 +72,9 @@ void fft(scomplex *senal,scomplex *fft_res, uint n,uint nproc){
       printf("ROOT.- Vectores recibidos y agrupados. Orden listo.\n");
     }else{
       dft(senal+semi_n, semi_n, 2, 0, semi_n);  
-      printf("ROOT.- Calculado solito...\n");
+      printf("ROOT.- Calculada FFT. Ordenando...\n");
       ordenar_bit_reversal_parcial(senal, fft_res, n, 1, 0);
+      printf("ROOT.- Orden listo.\n");
     }
   }else{
     /**** Procesos NO ROOT. ****/
@@ -118,7 +109,10 @@ void ordenar_bit_reversal_parcial(scomplex* senal, scomplex* fft_res, uint n, ui
   }
 }
 
-
+/* Función encargada de detener un proceso a la espera de
+ * una tarea determinada. Recibe parámetros y muestras para
+ * trabajar. 
+ */
 void fft_recibir_tarea(){
   MPI_Status status;
   uint aux, len, prof, dest, pos, orig, buf[5];  
@@ -132,9 +126,9 @@ void fft_recibir_tarea(){
   vector_aux = (scomplex*) malloc(len*sizeof(scomplex));
   MPI_Recv(vector_aux, len, complex_MPI, MPI_ANY_SOURCE, MPI_TAGMUE, MPI_COMM_WORLD, &status);  /* Origen.       */
 
-  //printf("****** Senal rec: \n");imprimir_vector_complejo(vector_aux, len);
-  printf("* %u.- Recibi datos con exito (verif=%f). Calculando FFT...\n", myrank,(double)calcular_suma_verif(len, vector_aux));
-  //printf("* %u.- Recibi datos con exito. Calculando FFT...\n", myrank);
+  
+  //printf("* %u.- Recibi datos con exito (verif=%f). Calculando FFT...\n", myrank,(double)calcular_suma_verif(len, vector_aux));
+  printf("* %u.- Recibi datos con exito. Calculando FFT...\n", myrank);
 
   dft(vector_aux, len,prof,myrank,pos);
   printf("* %u.- Calcule FFT con exito. Enviando a ROOT %u elementos...\n", myrank, nro_muestras_total/np_total);
@@ -158,18 +152,19 @@ void dft(scomplex *senal, uint mylen, uint profundidad, uint myrank, uint posici
 
     /* Cálculo de parámetros para asignación de tarea. */
     if (mylen <= (nro_muestras_total/np_total)){ /* Si la asginación ha llegado al límite... */
-      posicion_segundo_hijo = posicion;  /* No seguir repartiendo el trabajo. */
-      responsable = myrank;              /* Tomarlo en el proceso actual.     */
+      posicion_segundo_hijo = posicion; /* No seguir repartiendo el trabajo. */
+      responsable = myrank;             /* Tomarlo en el proceso actual.     */
     }else{ /* O, repartir el trabajo. No tomarlo en el proceso actual. */
       posicion_segundo_hijo = posicion+(mylen>>1);    /* Fijar posición de arranque en el vector. */
       responsable = responsab(posicion_segundo_hijo); /* Establecer proceso destinatario.         */
     }
 
     /* Asignación de tarea al segundo hijo. */
-    if (responsable==myrank) /* Debe continuar calculando aún la segunda rama... */
+    if (responsable==myrank){ /* Debe continuar calculando aún la segunda rama... */
       dft(senal+semi_len, semi_len,profundidad<<1,responsable,posicion_segundo_hijo); /* Es llamada la FFT a secas. */    
-    else                /* O, deriva el trabajo hacia el hijo.               */
+    }else{                /* O, deriva el trabajo hacia el hijo.               */
       derivar_trabajo(senal+semi_len, semi_len, profundidad<<1, responsable, posicion_segundo_hijo, myrank);
+    }
 
     dft(senal,   semi_len,profundidad<<1,myrank,posicion);  /* Calcula la primera rama siempre. */
   }
@@ -186,14 +181,10 @@ void derivar_trabajo(scomplex* senal, uint semi_len, uint profundidad, uint resp
   buf[0]=semi_len; buf[1]=profundidad; buf[2]=respons; buf[3]=pos; buf[4]=myrank;
   MPI_Send(buf, 5, MPI_UNSIGNED, respons, MPI_TAGPARAM, MPI_COMM_WORLD);        /* Buffer de parámetros.  */
   MPI_Send(senal, semi_len, complex_MPI, respons, MPI_TAGMUE, MPI_COMM_WORLD);  /* Vector.                */
-
-
-  //printf("****** Senal env: \n");imprimir_vector_complejo(senal, semi_len);
-  //printf("* %u.- Envie datos con exito (verif=%f). Calculando FFT...\n", myrank,calcular_suma_verif(semi_len, senal));
   
-  printf("* %u.- Derive con exito el trabajo a %u (verif=%f).\n", myrank, respons, (double)calcular_suma_verif(semi_len, senal));
   printf("* %u.- Derive con exito (orig=%u prof=%u dest=%u pos=%u orig=%u).\n", myrank,myrank,profundidad,respons,pos,myrank);
-  //printf("* %u.- Derive con exito el trabajo a %u.\n", myrank, respons);
+  printf("* %u.- Derive con exito el trabajo a %u.\n", myrank, respons);
+  //printf("* %u.- Derive con exito el trabajo a %u (verif=%f).\n", myrank, respons, (double)calcular_suma_verif(semi_len, senal));
 }
 
 

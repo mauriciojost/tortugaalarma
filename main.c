@@ -10,8 +10,7 @@
 #define ROOT 0
 #define Ki 1024
 #define MiB Ki*Ki/16 // 16 MB son logrados con 1M muestras (1 cmplx -> 2 doubles -> 16 bytes).
-//#define N MiB*64
-#define N 8
+#define N MiB*256
 
 
 int main(int argc, char *argv[]){
@@ -53,7 +52,7 @@ int main(int argc, char *argv[]){
     imprimir_maximo_modulo(fft_res, n, fs);
 
     FILE* fp = (FILE*) abrir_archivo_out("fft.txt");
-    escribir_fft_archivo_y_cerrar(fp,fft_res,n,fs);
+    //escribir_fft_archivo_y_cerrar(fp,fft_res,n,fs);
     
     free(fft_res);
   }
