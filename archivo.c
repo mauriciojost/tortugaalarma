@@ -4,93 +4,103 @@
 #include "archivo.h"
 #include "complejo.h"
 
-FILE* abrir_archivo_in(char *nombre){
-  FILE *fp;
-  fp = fopen (nombre, "r");
-  if ((int)fp==-1){
-    printf("Error al abrir el archivo '%s'.\n",nombre);
-    exit(-1);
-  }
-  return fp;
-}
+
+//#define FORMATO_EN_ARCHIVO     "%2.2f+j*%2.2f\n"
+//#define FORMATO_EN_ARCHIVO_FFT "%1.1fHz-> %2.2f+j*%2.2f\n"
+//#define FORMATO_EN_ARCHIVO_MODFFT "%1.1fHz-> %2.2f\n"
+
+#define FORMATO_EN_ARCHIVO     "%f+%fj\n"
+#define FORMATO_EN_ARCHIVO_SN  "%f+%fj"
+
+#define FORMATO_EN_ARCHIVOT     "%f+%fj\n"
+#define FORMATO_EN_ARCHIVOT_SN  "%f+%fj"
+
+#define FORMATO_EN_ARCHIVO_FFT "%f -> %f + %fj \n"
+#define FORMATO_EN_ARCHIVO_FFT_SN "%f -> %f + %fj"
+
+#define FORMATO_EN_ARCHIVO_MODFFT    "%1.1fHz-> %2.2f\n"
+#define FORMATO_EN_ARCHIVO_MODFFT_SN "%1.1fHz-> %2.2f"
+
 
 FILE* abrir_archivo_out(char *nombre){
-  FILE* fp;
-  fp = fopen (nombre, "w");
-  if ((int)fp==-1){
-    printf("Error al abrir el archivo '%s'.\n",nombre);
-    exit(-1);
+  FILE* fp = fopen (nombre, "w");
+  if (fp==NULL){
+    printf("Error al abrir el archivo '%s'.\n",nombre); exit(-1);
   }else{
-    printf("Archivo '%s' abierto correctamente.\n",nombre);
+    printf("Archivo '%s' abierto correctamente. Listo para su escritura.\n",nombre);
   }
   return fp;
 }
 
-void escribir_archivo_y_cerrar(FILE* fp, struct complex vector[], int n){
+FILE* abrir_archivo_in(char *nombre){
+  FILE* fp = fopen (nombre, "r");
+  if (fp==NULL){
+    printf("Error al abrir el archivo '%s'.\n",nombre); exit(-1);
+  }else{
+    printf("Archivo '%s' abierto correctamente. Listo para su lectura.\n",nombre);
+  }
+  return fp;
+}
+
+void escribir_archivo_t(char* nombre, struct complex vector[], unsigned int n, float fs){
   int i;
+  FILE* fp = abrir_archivo_out(nombre);
+
+  fprintf(fp, "%f\n",fs); fprintf(fp, "%u\n",n); /* Escribe fs y luego len. */
   for (i=0;i<n;i++){
-    fprintf(fp, FORMATO_EN_ARCHIVO,vector[i].re,vector[i].im);
+    fprintf(fp, FORMATO_EN_ARCHIVOT,vector[i].re,vector[i].im);
   }
   fclose (fp);
 }
 
+void abrir_archivo_t(char *nombre, scomplex* vector[], unsigned int* n, float* fs){
+  char buffer[101];
+  unsigned int i;
+  float f,rea,ima;
+  FILE *fp = abrir_archivo_in(nombre);
 
-void escribir_modfft_archivo_y_cerrar(FILE* fp, struct complex vector[], int n, float fs){
-  int i;
-  printf("Escribir mod(FFT).\n");
-  printf("Recibido fs=%f.\n",fs);
-  for (i=n/2;i<n;i++){
+  
+  fgets(buffer, 100,fp); sscanf(buffer,"%f",fs); /* Lee fs.  */
+  fgets(buffer, 100,fp); sscanf(buffer,"%u",n);  /* Lee len. */
+
+  (*vector) = (scomplex*) malloc((*n)*sizeof(scomplex));          
+  printf("Vector de %u elementos creado. Leyendo...\n",*n);
+
+  i=0;
+  while(!feof(fp)){
+    fgets(buffer, 100,fp);  
+    sscanf(buffer,FORMATO_EN_ARCHIVO_SN, &rea, &ima);
+    (*vector)[i].re = rea; (*vector)[i++].im = ima;
+    if (i==*n){break;}
+  }
+  printf("Lectura lista. Obtenidos %u elementos.\n",i);
+  fclose(fp);  
+}
+
+void escribir_archivo_mf(char* nombre, scomplex vector[], uint n, float fs){
+  uint i;
+  FILE *fp = abrir_archivo_out(nombre);
+  printf("Escribiendo mod(FFT).\n");
+
+  for (i=n/2;i<n;i++)
     fprintf(fp, FORMATO_EN_ARCHIVO_MODFFT, ((float)(i-n/2)/n - 0.5)*fs, sqrt(pow(vector[i].re, 2.0) + pow(vector[i].im, 2.0)));
-  }
-  for (i=0;i<(n/2);i++){
+  for (i=0;i<(n/2);i++)
     fprintf(fp, FORMATO_EN_ARCHIVO_MODFFT, ((float)i/n)*fs, sqrt(pow(vector[i].re, 2.0) + pow(vector[i].im, 2.0)));
-  }
   
   fclose (fp);
-  printf("Fin escribir mod(FFT).\n");
 }
 
+void escribir_archivo_f(char *nombre, scomplex vector[], uint n, float fs){
+  uint i;
+  FILE *fp = abrir_archivo_out(nombre);
+  printf("Escribiendo FFT.\n");
 
-
-
-void escribir_fft_archivo_y_cerrar(FILE* fp, struct complex vector[], int n, float fs){
-  int i;
-  printf("Escribir FFT.\n");
-  printf("Recibido fs=%f.\n",fs);
-  for (i=n/2;i<n;i++){
+  for (i=n/2;i<n;i++)
     fprintf(fp, FORMATO_EN_ARCHIVO_FFT, ((float)(i-n/2)/n - 0.5)*fs, vector[i].re,vector[i].im);
-  }
-  for (i=0;i<(n/2);i++){
+
+  for (i=0;i<(n/2);i++)
     fprintf(fp, FORMATO_EN_ARCHIVO_FFT,  ((float)i/n)*fs, vector[i].re,vector[i].im);
-  }
   
   fclose (fp);
-  printf("Fin escribir FFT.\n");
 }
-
-
-
-
-void cerrar_archivo(FILE* fp){
-  fclose (fp);
-}
-
-
-
-    //FILE *fp3, *fp2, *fp;
-    //fp  = (FILE*) abrir_archivo_out("senal_usada.txt");
-    //fp2 = (FILE*) abrir_archivo_out("salida.txt");
-    //fp3 = (FILE*) abrir_archivo_out("salidamod.txt");
-    
-    //escribir_archivo_y_cerrar(fp,vector, n);
-    //printf("* Iniciado el procesamiento de FFT (%d muestras).\n", n);
-    //tiempo = clock();
-    //ffttras(senal, fft_res, n,np);            /* Procesar FFT. El vector X sólo se usa una vez.*/
-    //tiempo = clock() - tiempo;
-    //free(senal);
-    //printf("* Procesamiento de FFT terminado.\n");
-    //imprimir_maximo_modulo(fft_res, n, fs);
-    //escribir_modfft_archivo_y_cerrar(fp3,vector2, n,fs);
-    //printf("Listo! FFT tardo %d ciclos.\n",tiempo);
-
 

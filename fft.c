@@ -55,6 +55,7 @@ void fft(scomplex *senal,scomplex *fft_res, uint n,uint nproc){
     dft(senal, semi_n, 2, 0, 0);  
     
     if (nproc!=1){
+      free(twiddle_factors);
       uint bloque = nro_muestras_total/np_total;
       printf("\nROOT.- FFT parcial lista. Esperando vectores (%u elementos c/u)...\n", bloque);
       MPI_Gather(senal, bloque, complex_MPI, senal, bloque, complex_MPI, ROOT, MPI_COMM_WORLD);
@@ -68,10 +69,11 @@ void fft(scomplex *senal,scomplex *fft_res, uint n,uint nproc){
       printf("\nROOT.- Vector parcial ordenado. Esperando demas vectores...\n");
       MPI_Gather(fft_parc, bloque, complex_MPI, fft_res, bloque, complex_MPI, ROOT, MPI_COMM_WORLD);
 
-      free(twiddle_factors);
+      
       printf("ROOT.- Vectores recibidos y agrupados. Orden listo.\n");
     }else{
       dft(senal+semi_n, semi_n, 2, 0, semi_n);  
+      free(twiddle_factors);
       printf("ROOT.- Calculada FFT. Ordenando...\n");
       ordenar_bit_reversal_parcial(senal, fft_res, n, 1, 0);
       printf("ROOT.- Orden listo.\n");
@@ -85,7 +87,7 @@ void fft(scomplex *senal,scomplex *fft_res, uint n,uint nproc){
     printf("* %u.- Datos recibidos. Ordenando...\n", myrank);
     scomplex* fft_parc = (scomplex*) malloc((n/np_total)*sizeof(scomplex));
     ordenar_bit_reversal_parcial(senal, fft_parc, n, np_total, myrank);
-
+    free(senal);
     uint bloque = nro_muestras_total/np_total;
     printf("* %u.- Vector parcial ordenado. Enviando...\n", myrank);
     MPI_Gather(fft_parc, bloque , complex_MPI, NULL, 0, complex_MPI, ROOT, MPI_COMM_WORLD);
@@ -134,8 +136,9 @@ void fft_recibir_tarea(){
   printf("* %u.- Calcule FFT con exito. Enviando a ROOT %u elementos...\n", myrank, nro_muestras_total/np_total);
   uint bloque = nro_muestras_total/np_total;
   MPI_Gather(vector_aux, bloque , complex_MPI, NULL, 0, complex_MPI, ROOT, MPI_COMM_WORLD);
-  printf("* %u.- Envie resultado a ROOT con exito.\n", myrank);
   free(vector_aux);
+  printf("* %u.- Envie resultado a ROOT con exito.\n", myrank);
+ 
 }
 
 
