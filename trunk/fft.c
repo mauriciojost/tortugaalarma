@@ -20,27 +20,30 @@ scomplex *twiddle_factors;
 
 
 void fft(scomplex *senal,scomplex *fft_res, uint n,uint nproc){
-  uint  i, semi_n=n>>1;
+  uint  i, semi_n;
   float arg;
 
+  MPI_Bcast(&n, 1, MPI_UNSIGNED, ROOT, MPI_COMM_WORLD); /* ROOT indica el tamaño del vector. */
+
+  semi_n=n>>1;
   nro_muestras_total=n;
   np_total = nproc;
 
+  /* Cálculo de los factores de fase. */
   twiddle_factors = (scomplex*) malloc((n>>1)*sizeof(scomplex));
-
   for (i=0;i<(n>>1);i++){
     arg = PI2*i/n;
 	  twiddle_factors[i].re = cos((double)arg);
 	  twiddle_factors[i].im = sin((double)arg);
   }
 
-  MPI_Type_contiguous(2, MPI_DOUBLE, &complex_MPI); /* Creación de un nuevo tipo MPI. 1 Complejo. */
+  /* Creación de un nuevo tipo MPI. 1 Complejo. */
+  MPI_Type_contiguous(2, MPI_DOUBLE, &complex_MPI); 
   MPI_Type_commit(&complex_MPI);
   MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
 
   if (myrank == ROOT){
     /**** Proceso ROOT. ****/
-
     printf("\nROOT.- Calculando primera etapa...\n");
     for(i=0;i<semi_n;i++){ 
       mariposa(&senal[i], &senal[i+semi_n], i);
@@ -54,7 +57,7 @@ void fft(scomplex *senal,scomplex *fft_res, uint n,uint nproc){
     printf("\nROOT.- Primera llamada a FFT...\n");
     dft(senal, semi_n, 2, 0, 0);  
     
-    if (nproc!=1){
+    if (nproc!=1){  /* Caso en el que no se encuentra sólo el ROOT, sino con otros uP. */
       free(twiddle_factors);
       uint bloque = nro_muestras_total/np_total;
       printf("\nROOT.- FFT parcial lista. Esperando vectores (%u elementos c/u)...\n", bloque);
@@ -67,11 +70,9 @@ void fft(scomplex *senal,scomplex *fft_res, uint n,uint nproc){
       scomplex* fft_parc = (scomplex*) malloc((n/np_total)*sizeof(scomplex));
       ordenar_bit_reversal_parcial(senal, fft_parc, n, np_total, myrank);
       printf("\nROOT.- Vector parcial ordenado. Esperando demas vectores...\n");
-      MPI_Gather(fft_parc, bloque, complex_MPI, fft_res, bloque, complex_MPI, ROOT, MPI_COMM_WORLD);
-
-      
+      MPI_Gather(fft_parc, bloque, complex_MPI, fft_res, bloque, complex_MPI, ROOT, MPI_COMM_WORLD);  
       printf("ROOT.- Vectores recibidos y agrupados. Orden listo.\n");
-    }else{
+    }else{ /* El ROOT es el único uP. */
       dft(senal+semi_n, semi_n, 2, 0, semi_n);  
       free(twiddle_factors);
       printf("ROOT.- Calculada FFT. Ordenando...\n");
@@ -124,7 +125,7 @@ void fft_recibir_tarea(){
   MPI_Recv(buf, 5, MPI_UNSIGNED, MPI_ANY_SOURCE, MPI_TAGPARAM, MPI_COMM_WORLD, &status); /* Buffer de parámetros. */
   len=buf[0];prof=buf[1];dest=buf[2];pos=buf[3];orig=buf[4];
 
-  printf("* %u.- Recibida tarea (orig=%u prof=%u dest=%u pos=%u orig=%u).\n", myrank,orig,prof,dest,pos,orig);
+  printf("* %u.- Recibida tarea (orig=%u prof=%u dest=%u pos=%u).\n", myrank,orig,prof,dest,pos);
   vector_aux = (scomplex*) malloc(len*sizeof(scomplex));
   MPI_Recv(vector_aux, len, complex_MPI, MPI_ANY_SOURCE, MPI_TAGMUE, MPI_COMM_WORLD, &status);  /* Origen.       */
 
@@ -185,8 +186,7 @@ void derivar_trabajo(scomplex* senal, uint semi_len, uint profundidad, uint resp
   MPI_Send(buf, 5, MPI_UNSIGNED, respons, MPI_TAGPARAM, MPI_COMM_WORLD);        /* Buffer de parámetros.  */
   MPI_Send(senal, semi_len, complex_MPI, respons, MPI_TAGMUE, MPI_COMM_WORLD);  /* Vector.                */
   
-  printf("* %u.- Derive con exito (orig=%u prof=%u dest=%u pos=%u orig=%u).\n", myrank,myrank,profundidad,respons,pos,myrank);
-  printf("* %u.- Derive con exito el trabajo a %u.\n", myrank, respons);
+  printf("* %u.- Derive con exito (orig=%u prof=%u dest=%u pos=%u).\n", myrank,myrank,profundidad,respons,pos);
   //printf("* %u.- Derive con exito el trabajo a %u (verif=%f).\n", myrank, respons, (double)calcular_suma_verif(semi_len, senal));
 }
 

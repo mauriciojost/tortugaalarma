@@ -5,9 +5,77 @@
 #include "complejo.h"
 
 
-//#define FORMATO_EN_ARCHIVO     "%2.2f+j*%2.2f\n"
-//#define FORMATO_EN_ARCHIVO_FFT "%1.1fHz-> %2.2f+j*%2.2f\n"
-//#define FORMATO_EN_ARCHIVO_MODFFT "%1.1fHz-> %2.2f\n"
+#define Ki 1024
+#define MiB Ki*Ki/16 // 16 MB son logrados con 1M muestras (1 cmplx -> 2 doubles -> 16 bytes).
+
+
+void generar_archivo(){
+  float fs=10000.0, f=770.000;
+  uint cant=MiB*1;
+  scomplex *senial;
+  printf("*** Cargando vector...\n");
+  senial = (scomplex*) malloc(cant*sizeof(scomplex));          
+  
+  //generar_base_unitaria(senial, cant);
+  generar_coseno(senial,cant,fs,f);
+  //generar_expcomp(senial,cant,fs,f);
+
+  //montardc(senial,cant,0.8);
+  //montar_ruido(senial, cant,1);
+  //modular(senial, cant, fs, f);
+  //modular_complejo(senial, cant, fs, f*4);
+
+  printf("*** Guardando archivo...\n");
+  escribir_archivo_t("entrada.txt", senial, cant, fs);
+  free(senial);
+}
+
+
+
+void modular_complejo(scomplex* senal, uint n, float fs, float fm){
+  uint i;
+  scomplex argum, aux;
+  for(i=0; i<n; i++){
+    argum.re = cos(PI2*(((float)i)/fs)*fm);
+    argum.im = sin(PI2*(((float)i)/fs)*fm);
+    aux.re = senal[i].re*argum.re - senal[i].im*argum.im;
+    aux.im = senal[i].re*argum.im + senal[i].im*argum.re;
+    senal[i].re = aux.re; senal[i].im = aux.im;
+  } 
+}
+
+void modular(scomplex* senal, uint n, float fs, float fm){
+  uint i;
+  float argum;
+  for(i=0; i<n; i++){
+    argum = cos(PI2*(((float)i)/fs)*fm);
+    senal[i].re *= argum;
+    senal[i].im *= argum;
+  } 
+}
+
+void generar_base_unitaria(scomplex* senal, uint n){
+  uint i;
+  for(i=0; i<n; i++){
+    senal[i].re = 1; senal[i].im = 0;
+  }
+}
+void montardc(scomplex* senal, uint n, float dc){
+  uint i;
+  for(i=0; i<n; i++){
+    senal[i].re += dc;
+  }
+}
+void montar_ruido(scomplex* senal, uint n, float factor){
+  uint i;
+  float ruido;
+  srand((int)clock());
+  for(i=0; i<n; i++){
+    ruido = (((float)(rand()-(RAND_MAX>>1))/(float)RAND_MAX)*(factor*600));
+    senal[i].re += ruido;
+  }
+}
+
 
 #define FORMATO_EN_ARCHIVO     "%f+%fj\n"
 #define FORMATO_EN_ARCHIVO_SN  "%f+%fj"
@@ -20,7 +88,6 @@
 
 #define FORMATO_EN_ARCHIVO_MODFFT    "%1.1fHz-> %2.2f\n"
 #define FORMATO_EN_ARCHIVO_MODFFT_SN "%1.1fHz-> %2.2f"
-
 
 FILE* abrir_archivo_out(char *nombre){
   FILE* fp = fopen (nombre, "w");
@@ -80,7 +147,7 @@ void abrir_archivo_t(char *nombre, scomplex* vector[], unsigned int* n, float* f
 void escribir_archivo_mf(char* nombre, scomplex vector[], uint n, float fs){
   uint i;
   FILE *fp = abrir_archivo_out(nombre);
-  printf("Escribiendo mod(FFT).\n");
+  printf("Escribiendo archivo con mod(FFT)...\n");
 
   for (i=n/2;i<n;i++)
     fprintf(fp, FORMATO_EN_ARCHIVO_MODFFT, ((float)(i-n/2)/n - 0.5)*fs, sqrt(pow(vector[i].re, 2.0) + pow(vector[i].im, 2.0)));
@@ -93,7 +160,7 @@ void escribir_archivo_mf(char* nombre, scomplex vector[], uint n, float fs){
 void escribir_archivo_f(char *nombre, scomplex vector[], uint n, float fs){
   uint i;
   FILE *fp = abrir_archivo_out(nombre);
-  printf("Escribiendo FFT.\n");
+  printf("Escribiendo archivo FFT...\n");
 
   for (i=n/2;i<n;i++)
     fprintf(fp, FORMATO_EN_ARCHIVO_FFT, ((float)(i-n/2)/n - 0.5)*fs, vector[i].re,vector[i].im);
