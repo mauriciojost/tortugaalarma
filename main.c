@@ -8,27 +8,10 @@
 #include "acc_fft.h"
 
 #define ROOT 0
-#define Ki 1024
-#define MiB Ki*Ki/16 // 16 MB son logrados con 1M muestras (1 cmplx -> 2 doubles -> 16 bytes).
-#define N 128*32//MiB/2
-
-void generar_archivo(){
-  float fs=10000.0, f=1234.56789012345;
-  scomplex *senial;
-  printf("*** Cargando vector...\n");
-  senial = (scomplex*) malloc(N*sizeof(scomplex));          
-  cargar_vector_complejo(senial,N,fs,f);
-  printf("*** Guardando archivo...\n");
-  escribir_archivo_t("entrada.txt", senial, N, fs);
-  free(senial);
-}
-
-
 
 int main(int argc, char *argv[]){
-  uint n=N;
   float fs;
-  uint nprocs, myrank, i, tiempo;
+  uint nprocs, n, myrank, tiempo;
   MPI_Status status;
   MPI_Datatype complex_MPI;
   scomplex *senal, *fft_res;
@@ -43,12 +26,18 @@ int main(int argc, char *argv[]){
 
   MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
   if (myrank == ROOT){
-    generar_archivo();
-
+    
+    float f=770.0; n=1*32*32*1024; fs=10000; 
+    senal = (scomplex*) malloc(n*sizeof(scomplex));          
+    generar_coseno(senal,n,fs,f);
+    
+    /*
+    generar_archivo(); // Borrar esto (para la entrega)*********.
     printf("ROOT.- Abriendo archivo...\n");        
     abrir_archivo_t("entrada.txt", &senal, &n, &fs);
-    printf("ROOT.- Iniciado el procesamiento de FFT (%d muestras).\n", n);
+    */
 
+    printf("ROOT.- Iniciado el procesamiento de FFT (%d muestras).\n", n);
     tiempo = clock();  
     fft_res = (scomplex*) malloc(n*sizeof(scomplex));
   }
@@ -58,12 +47,10 @@ int main(int argc, char *argv[]){
   if (myrank == ROOT){
     tiempo = clock() - tiempo;
     printf("ROOT.- Listo! FFT tardo %f segundos (CLOCKS_PER_SEC=%u).\n",(double)tiempo/(double)CLOCKS_PER_SEC,(uint)CLOCKS_PER_SEC);
-    
     free(senal);    
     imprimir_maximo_modulo(fft_res, n, fs);
-
-    escribir_archivo_f("fft.txt", fft_res, n, fs);
-        
+    //escribir_archivo_f("fft.txt", fft_res, n, fs);
+    escribir_archivo_mf("fftm.txt", fft_res, n, fs);
     free(fft_res);
   }
     
