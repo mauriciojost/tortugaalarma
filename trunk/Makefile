@@ -22,6 +22,9 @@ acc_fft.o : acc_fft.c
 	$(CC) -c acc_fft.c
 
 clean:
+	rm -f *.o *~ fft *.out
+
+cleana:
 	rm -f *.o *~ fft *.out *.txt
 
 run:
