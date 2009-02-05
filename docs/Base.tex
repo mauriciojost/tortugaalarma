@@ -9,6 +9,8 @@
 \usepackage{graphicx}
 \usepackage{anysize}
 \usepackage[T1]{fontenc}
+\usepackage{booktabs}
+\usepackage{tabulary}
 
 
 %avant, avantgar, bookman, chancery, charter, courier, helvet, helvetic, ncntrsbk, newcent, palatcm, palatino, pifont, %times, utopia, zapfchan. Modo de uso: \usepackage{avant}, etc.
@@ -43,7 +45,7 @@
 \begin{center}
 % Uso de tamaños (mediante ambientes): small, normalsize, large, Large y LARGE.
 
-        
+
 
 \begin{LARGE}
 \bigskip\bigskip\bigskip\bigskip    % Espacios grandes.
@@ -81,9 +83,9 @@ UNC
     \fancyhf{}
     \fancyhead[R]{\bfseries \rightmark}
     \fancyhead[LE]{\bfseries \leftmark}
-    \fancyhead[LO]{\ECFTeenSpirit Mauricio G. Jost}         %Encabezado
+    \fancyhead[LO]{\ECFTeenSpirit Jost}         %Encabezado
     \fancyfoot[C]{\bfseries \thepage}       %Pie de página
-    
+
     \renewcommand{\headrulewidth}{1pt}      %Linea en el encabezado
     \renewcommand{\footrulewidth}{1pt}      %Linea en el pie de pagina.
 }
@@ -294,24 +296,60 @@ el trabajo deja de distribuirse, y cada procesador continua con la totalidad de 
 
 
 \section{Mediciones}
-Las mediciones tomadas muestran tiempos para diferentes tamaños de vector, y para diferente cantidad de procesadores.
+Las mediciones tomadas muestran tiempos en [Seg\footnote{\textit{Seg.} es la unidad entregada por la función ANSI C \textit{clock\_t clock()} dividida entre \textit{CLOCKS\_PER\_SEC}. Es usada a los efectos de establecer comparaciones entre dos algoritmos, y no se pretende con ella sugerir tiempos absolutos de ejecución.}] para diferentes tamaños de vector, y para diferente cantidad de procesadores.
 
-\begin{table}[ht]
+
+\begin{table}[htp]
 \centering
 \begin{center}
-  \begin{tabular}{|c|c|c|c|c|c|}
+  \scriptsize
+  \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
     \hline
-            & 1M & 2M & 4M & 8M & 16M \\
+    Muestras & 16Ki&32Ki& 64Ki & 128Ki&  256Ki&  512Ki& 1Mi& 2Mi& 4Mi& 8Mi& 16Mi& 32Mi& 64Mi\\
     \hline
-    1 uP    & 1  & 1  & 1  & 1  &   1 \\
-    2 uP    & 1  & 1  & 1  & 1  &   1 \\
+    1 uP     & 0.01&0.02&0.05&0.13&0.31&0.72&1.54&4.41&7.30&16.62&34.90&70.57&154.36\\
+    2 uP     & 0.01&0.02&0.04&0.12&0.21&0.45&0.92&2.00&4.33& 9.12&19.46&38.68&>10min\\
     \hline
   \end{tabular}
 \end{center}
 \small
-\caption{Mediciones}
+\caption{Mediciones. Tiempos en [seg*].}
 \label{T:Tabla_mediciones}
 \end{table}
+
+La aparentemente inexplicable medición obtenida para 2uP y 64Mi muestras, es causada por falta de memoria principal. Para ciertas etapas del algoritmo, cada proceso requiere volúmenes grandes de memoria (por ejemplo al hacer \textit{bit reversal}). No disponer de esa memoria implica la utilización de memoria de intercambio (memoria secundaria), y por ende aumentos imprevistos de tiempo de ejecución.
+
+La siguientes figuras muestran estos resultados.
+
+
+
+\bigskip
+\begin{figure}[htp]
+\centering
+\includegraphics[scale=0.75]{mediciones0_2K.jpg}
+\caption{
+\small
+Mediciones de la FFT con paralelismo realizadas en una PC Notebook HP530, CoreDuo 1.66 GHz, 2GiB RAM, SO Fedora 10.}
+\label{F:mediciones}
+\end{figure}
+\bigskip
+
+\bigskip
+\begin{figure}[htp]
+\centering
+\includegraphics[scale=0.75]{mediciones0_30K.jpg}
+\caption{
+\small
+Mediciones de la FFT con paralelismo realizadas en una PC Notebook HP530, CoreDuo 1.66 GHz, 2GiB RAM, SO Fedora 10.}
+\label{F:mediciones}
+
+\end{figure}
+\bigskip
+
+
+
+
+
 
 
 \newpage
