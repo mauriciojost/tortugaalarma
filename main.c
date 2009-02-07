@@ -40,7 +40,14 @@ int main(int argc, char *argv[]){
     printf("ROOT.- Abriendo archivo...\n");            
     */
 
-    abrir_archivo_t("entrada.txt", &senal, &n, &fs);
+    if (argc>1){
+      printf("* %u.- Leyendo entrada de %s.\n",myrank, argv[1]);
+      abrir_archivo_t(argv[1], &senal, &n, &fs);     
+    }else{
+      printf("* %u.- Leyendo entrada de entrada.txt.\n",myrank);
+      abrir_archivo_t("entrada.txt", &senal, &n, &fs);     
+    }
+
     printf("* %u.- Iniciado el procesamiento de FFT (%d muestras).\n", myrank, n);
     tiempo = clock();  
     fft_res = (scomplex*) malloc(n*sizeof(scomplex));
@@ -53,8 +60,16 @@ int main(int argc, char *argv[]){
     printf("* %u.- Listo! FFT tardo %f segundos (CLOCKS_PER_SEC=%u).\n",myrank,(double)tiempo/(double)CLOCKS_PER_SEC,(uint)CLOCKS_PER_SEC);
     free(senal);    
     imprimir_maximo_modulo(fft_res, n, fs);
-    //escribir_archivo_f("fft.txt", fft_res, n, fs);
-    escribir_archivo_mf("fftm.txt", fft_res, n, fs);
+    
+    if (argc>2){  
+      printf("* %u.- Escribiendo FFT en %s.\n",myrank, argv[2]);
+      escribir_archivo_f(argv[2], fft_res, n, fs);
+    }
+
+    if (argc>3){    
+      printf("* %u.- Escribiendo |FFT| en %s.\n",myrank, argv[3]);
+      escribir_archivo_mf(argv[3], fft_res, n, fs);
+    }
     free(fft_res);
   }
     
