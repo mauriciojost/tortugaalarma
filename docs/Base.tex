@@ -1,30 +1,28 @@
 \documentclass[12pt,a4paper,final,onecolumn]{article}
 
+%\usepackage[ansinew]{inputenc}             % Tildes y codificación del español.
+\usepackage[latin1]{inputenc}               % Tildes y codificación del español.
+\usepackage[spanish,activeacute]{babel}     % Guionado, y elementos del español.
+\usepackage{fancyhdr}                       % Gestión de encabezados y notas de página, etc.
 
-\usepackage[ansinew]{inputenc}
-\usepackage[spanish,activeacute]{babel}
-\usepackage{fancyhdr}                      %Paquete para gestionar
+\usepackage{color}                          % Color de fuente en el texto.
+\usepackage{graphicx}                       % Inclusión de figuras con archivos .jpg.
+\usepackage{anysize}                        % Tamaños de hoja, márgenes, etc.
+\usepackage[T1]{fontenc}                    % Tipo de codificación del documento.
+\usepackage{booktabs}                       % No recuerdo.
+\usepackage{tabulary}                       % Tablas.
 
-\usepackage{color}
-\usepackage{graphicx}
-\usepackage{anysize}
-\usepackage[T1]{fontenc}
-\usepackage{booktabs}
-\usepackage{tabulary}
-
+% Facilitar guionado a LaTex. Manifestación explícita de reglas.
+\hyphenation{si-guien-do ar-qui-tec-tu-ras reali-zan gra-nu-la-ri-dad reali-zar Reversal Bit su-pe-rior sub-blo-que}
 
 %avant, avantgar, bookman, chancery, charter, courier, helvet, helvetic, ncntrsbk, newcent, palatcm, palatino, pifont, %times, utopia, zapfchan. Modo de uso: \usepackage{avant}, etc.
 
-%\usepackage{charter}
-
+% Fuentes.
 \usepackage{emerald}
 \usepackage{utopia}
 
-
-\usepackage[dvipdfm,bookmarks=true,bookmarksnumbered=true,
- pdfkeywords={TeX; dvipdfmx; hyperref; color;},%
- colorlinks=true,linkcolor=blue]{hyperref}
-
+% Links, utilización y configuración de colores, etc.
+\usepackage[dvipdfm,bookmarks=true,bookmarksnumbered=true, pdfkeywords={TeX; dvipdfmx; hyperref; color;}, colorlinks=true,linkcolor=blue]{hyperref}
 
 
 
@@ -78,27 +76,27 @@ UNC
 \end{center}
 \newpage                                                    % Nueva página.
 
+% Estilo de cabeceras para el resto del documento.
 \fancypagestyle{plain}
 {
     \fancyhf{}
     \fancyhead[R]{\bfseries \rightmark}
     \fancyhead[LE]{\bfseries \leftmark}
-    \fancyhead[LO]{\ECFTeenSpirit Jost}         %Encabezado
+%    \fancyhead[LO]{\ECFTeenSpirit Jost}         %Encabezado
+    \fancyhead[LO]{Jost}         %Encabezado
     \fancyfoot[C]{\bfseries \thepage}       %Pie de página
 
     \renewcommand{\headrulewidth}{1pt}      %Linea en el encabezado
     \renewcommand{\footrulewidth}{1pt}      %Linea en el pie de pagina.
 }
-
 \pagestyle{plain}
 
-
+% Contenidos (o índice).
 \tableofcontents
-
-
 \newpage
 
-\setcounter{page}{1}
+\setcounter{page}{1}                        % Establece la página actual como nro. 1.
+
 \section{Introducción}
 
 Los algoritmos de FFT son múltiples, y existen tantos como cantidad
@@ -113,6 +111,8 @@ enunciados, y a la cual se ha recurrido para la implementación final, siguiendo 
 lineamientos de la materia.
 
 \newpage
+
+
 \section{Marco Teórico: FFT}
 
 \subsection{Usos de DFT y FFT}
@@ -128,7 +128,6 @@ habituales en el tratamiento de señales digitales. Es una forma eficiente de obt
 Transformada Discreta de Fourier (DFT). Genera el mismo resultado que se obtiene con la DFT.
 La FFT puede definirse como un reajuste matemático de la DFT para una obtención del mismo
 resultado a través de menos operaciones matemáticas, y por ello menos tiempo computacional.
-
 
 \subsection{Enfoque del diseño del algoritmo}
 
@@ -178,21 +177,20 @@ La aplicación de estas ecuaciones a un conjunto de muestras $x_{(n)}$ está repre
 
 La siguiente Figura describe el sentido práctico de las ecuaciones \ref{E:FFT1} y \ref{E:FFT2}.
 
-
 \bigskip
 \begin{figure}[htp]
 \centering
 \includegraphics[scale=0.45]{etapas.jpg}
+\centering
 \caption{
 \small
-Etapas de la FFT ($N=8$).}
+Etapas de la FFT ($N=8$).
+}
 \label{F:Etapas}
 \end{figure}
 \bigskip
 
-
 Cada una de las etapas involucra $\frac{N}{2}$ mariposas del tipo mostrado en la Figura (\ref{F:Mariposa}).
-
 
 \bigskip
 \begin{figure}[htp]
@@ -226,7 +224,6 @@ En la Figura \ref{F:Recursividad} se puede observar el conjunto de llamadas a un
 Notar que en cada etapa se produce una bifurcación de los datos a nivel de dependencias entre ellos. Esto se ha utilizado para generar paralelismo de grano grueso de sincronización. También es importante destacar que una vez logrado el último nivel de recursividad, los datos requieren de un ordenamiento especial antes de ser reagrupados.
 
 \subsection{Paralelismo}
-
 
 Como se puede observar en la Figura \ref{F:Etapas}, no existe dependencia entre dos bloques de datos luego de una bifurcación. Esto permite que los hilos o procesos que llevan a cabo las tareas para cada bloque, no requieran sincronizaciones tan frecuentes, o dicho de otra forma, presenten una granularidad alta de sincronización. Las condiciones de paralelismo de este algoritmo son favorables desde este punto de vista.
 
@@ -279,6 +276,7 @@ La siguiente Figura muestra un ejemplo.
 \begin{figure}[htp]
 \centering
 \includegraphics[scale=0.65]{balance_16_4_.jpg}
+\centering
 \caption{
 \small
 Ejemplo de balance de carga para el caso de $N_p=4$ y  $N_{muestras}=16$. Con
@@ -288,7 +286,6 @@ Cada círculo representa un dato calculado por el procesador indicado.}
 \end{figure}
 \bigskip
 
-
 Nótese en la Figura \ref{F:balance_ejemplo} que el algoritmo es imparcial al inicio.
 A medida que se avanza en las etapas la carga es mejor balanceada.
 Al momento de alcanzar la unidad mínima de distribución de trabajo ($\frac{N_{muestras}}{N_p} = 4$ para el ejemplo)
@@ -297,7 +294,7 @@ el trabajo deja de distribuirse, y cada procesador continua con la totalidad de 
 
 \section{Mediciones}
 Las mediciones tomadas muestran tiempos en [Seg\footnote{\textit{Seg.} es la unidad entregada por la función ANSI C \textit{clock\_t clock()} dividida entre \textit{CLOCKS\_PER\_SEC}. Es usada a los efectos de establecer comparaciones entre dos algoritmos, y no se pretende con ella sugerir tiempos absolutos de ejecución.}] para diferentes tamaños de vector, y para diferente cantidad de procesadores.
-
+El sistema utilizado para todos los casos es una PC Notebook HP530, CoreDuo 1.66 GHz, 2GiB RAM, SO Fedora 10.
 
 \begin{table}[htp]
 \centering
@@ -319,40 +316,58 @@ Las mediciones tomadas muestran tiempos en [Seg\footnote{\textit{Seg.} es la uni
 
 La aparentemente inexplicable medición obtenida para 2uP y 64Mi muestras, es causada por falta de memoria principal. Para ciertas etapas del algoritmo, cada proceso requiere volúmenes grandes de memoria (por ejemplo al hacer \textit{bit reversal}). No disponer de esa memoria implica la utilización de memoria de intercambio (memoria secundaria), y por ende aumentos imprevistos de tiempo de ejecución.
 
-La siguientes figuras muestran estos resultados.
+La Figuras \ref{F:mediciones1} y \ref{F:mediciones2} muestran estos resultados. 
 
-
+Las Figuras \ref{F:medicionesrelacion1} y \ref{F:medicionesrelacion2} expresan la relación entre resultados para 1 y 2 procesadores.
 
 \bigskip
 \begin{figure}[htp]
 \centering
-\includegraphics[scale=0.75]{mediciones0_2K.jpg}
+\includegraphics[scale=0.3]{fftfig1.jpg}
 \caption{
 \small
-Mediciones de la FFT con paralelismo realizadas en una PC Notebook HP530, CoreDuo 1.66 GHz, 2GiB RAM, SO Fedora 10.}
-\label{F:mediciones}
+Mediciones de la FFT con paralelismo.}
+\label{F:mediciones1}
 \end{figure}
 \bigskip
 
 \bigskip
 \begin{figure}[htp]
 \centering
-\includegraphics[scale=0.75]{mediciones0_30K.jpg}
+\includegraphics[scale=0.3]{fftfig2.jpg}
 \caption{
 \small
-Mediciones de la FFT con paralelismo realizadas en una PC Notebook HP530, CoreDuo 1.66 GHz, 2GiB RAM, SO Fedora 10.}
-\label{F:mediciones}
+Mediciones de la FFT con paralelismo. Para una cantidad de muestras pequeña, las ventajas son menos evidentes.}
+\label{F:mediciones2}
+\end{figure}
+\bigskip
 
+\bigskip
+\begin{figure}[htp]
+\centering
+\includegraphics[scale=0.3]{relacion1.jpg}
+\caption{
+\small
+Relación entre mediciones de la FFT con paralelismo sobre 1 y 2 procesadores.}
+\label{F:medicionesrelacion1}
 \end{figure}
 \bigskip
 
 
-
-
-
-
-
+\bigskip
+\begin{figure}[htp]
+\centering
+\includegraphics[scale=0.3]{relacion2.jpg}
+\caption{
+\small
+Relación entre mediciones de la FFT con paralelismo sobre 1 y 2 procesadores. Ventajas pobres para cantidad reducida de muestras.}
+\label{F:medicionesrelacion2}
+\end{figure}
+\bigskip
 \newpage
+
+
+% Bibliografía.
 \begin{thebibliography}{9}
 
 \bibitem{B:Wikipedia} Wikipedia, \emph{Fast Fourier transform}, \url{http://en.wikipedia.org/wiki/Fast_Fourier_transform}.
@@ -369,7 +384,6 @@ Mediciones de la FFT con paralelismo realizadas en una PC Notebook HP530, CoreDu
 \bibitem{B:CatDSP} Cátedra de DSP - FCEFyN (UNC). Apunte \emph{Transformada de Fourier y el Algoritmo FFT}, \url{http://www.dsp.efn.unc.edu.ar/documentos/FFT.pdf}.
 
 \end{thebibliography}
-
 
 
 
