@@ -10,7 +10,7 @@
 
 
 void generar_archivo(){
-  float fs=10000.0, f=770.000;
+  float fs=10000.0, f=745.800;
   uint cant=MiB*1;
   scomplex *senial;
   printf("*** Cargando vector...\n");
@@ -60,12 +60,14 @@ void generar_base_unitaria(scomplex* senal, uint n){
     senal[i].re = 1; senal[i].im = 0;
   }
 }
+
 void montardc(scomplex* senal, uint n, float dc){
   uint i;
   for(i=0; i<n; i++){
     senal[i].re += dc;
   }
 }
+
 void montar_ruido(scomplex* senal, uint n, float factor){
   uint i;
   float ruido;

@@ -19,25 +19,29 @@ int main(int argc, char *argv[]){
   MPI_Init(&argc, &argv);  
   MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-  if (nprocs!=corregir_np(nprocs) || (nprocs<1)){
+  if (nprocs!=corregir_np(nprocs)){
     printf("Cantidad no valida de procesadores. Debe ser superior a 0 y potencia de 2 (1,2,4,8,...).\n");
     exit(-1);
   }
 
   MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
   if (myrank == ROOT){
-    
+
+    /*    
+    // UTILIZADO PARA GENERAR VECTOR DE GRAN VOLUMEN DE MUESTRAS.
+    // OMITE EL ARCHIVO DE POR MEDIO.    
     float f=770.0; n=1*32*32*1024; fs=10000; 
     senal = (scomplex*) malloc(n*sizeof(scomplex));          
     generar_coseno(senal,n,fs,f);
-    
-    /*
-    generar_archivo(); // Borrar esto (para la entrega)*********.
-    printf("ROOT.- Abriendo archivo...\n");        
-    abrir_archivo_t("entrada.txt", &senal, &n, &fs);
     */
 
-    printf("ROOT.- Iniciado el procesamiento de FFT (%d muestras).\n", n);
+    /*
+    generar_archivo(); // Borrar esto.
+    printf("ROOT.- Abriendo archivo...\n");            
+    */
+
+    abrir_archivo_t("entrada.txt", &senal, &n, &fs);
+    printf("* %u.- Iniciado el procesamiento de FFT (%d muestras).\n", myrank, n);
     tiempo = clock();  
     fft_res = (scomplex*) malloc(n*sizeof(scomplex));
   }
@@ -46,7 +50,7 @@ int main(int argc, char *argv[]){
   
   if (myrank == ROOT){
     tiempo = clock() - tiempo;
-    printf("ROOT.- Listo! FFT tardo %f segundos (CLOCKS_PER_SEC=%u).\n",(double)tiempo/(double)CLOCKS_PER_SEC,(uint)CLOCKS_PER_SEC);
+    printf("* %u.- Listo! FFT tardo %f segundos (CLOCKS_PER_SEC=%u).\n",myrank,(double)tiempo/(double)CLOCKS_PER_SEC,(uint)CLOCKS_PER_SEC);
     free(senal);    
     imprimir_maximo_modulo(fft_res, n, fs);
     //escribir_archivo_f("fft.txt", fft_res, n, fs);

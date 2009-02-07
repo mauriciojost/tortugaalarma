@@ -25,6 +25,9 @@ void fft(scomplex *senal,scomplex *fft_res, uint n,uint nproc){
 
   MPI_Bcast(&n, 1, MPI_UNSIGNED, ROOT, MPI_COMM_WORLD); /* ROOT indica el tamaño del vector. */
 
+  if ((2*n)<nproc){
+    printf("Error. Debe haber al menos 2 muestras por procesador.\n"); MPI_Finalize(); exit(-1);
+  }
   semi_n=n>>1;
   nro_muestras_total=n;
   np_total = nproc;
@@ -44,40 +47,40 @@ void fft(scomplex *senal,scomplex *fft_res, uint n,uint nproc){
 
   if (myrank == ROOT){
     /**** Proceso ROOT. ****/
-    printf("\nROOT.- Calculando primera etapa...\n");
+    printf("* %u.- Calculando primera etapa...\n",myrank);
     for(i=0;i<semi_n;i++){ 
       mariposa(&senal[i], &senal[i+semi_n], i);
     }  
 
     if (nproc!=1){
-      printf("ROOT.- Listo. Enviando mitad procesada a %u (%u elementos)...\n",responsab(semi_n), semi_n);
+      //printf("* %u.- Listo. Enviando mitad procesada a %u (%u elementos)...\n",myrank,responsab(semi_n), semi_n);
       derivar_trabajo(senal+semi_n, semi_n, 2, responsab(semi_n), semi_n, 0);
     } 
 
-    printf("\nROOT.- Primera llamada a FFT...\n");
+    printf("* %u.- Primera llamada a FFT...\n",myrank);
     dft(senal, semi_n, 2, 0, 0);  
     
     if (nproc!=1){  /* Caso en el que no se encuentra sólo el ROOT, sino con otros uP. */
       free(twiddle_factors);
       uint bloque = nro_muestras_total/np_total;
-      printf("\nROOT.- FFT parcial lista. Esperando vectores (%u elementos c/u)...\n", bloque);
+      printf("* %u.- FFT parcial lista. Esperando vectores (%u elementos c/u)...\n",myrank, bloque);
       MPI_Gather(senal, bloque, complex_MPI, senal, bloque, complex_MPI, ROOT, MPI_COMM_WORLD);
 
-      printf("\nROOT.- Vectores parciales recibidos. Reenviando vector agrupado para ordenar...\n");
+      printf("* %u.- Vectores parciales recibidos. Reenviando vector agrupado para ordenar...\n",myrank);
       MPI_Bcast(senal, n, complex_MPI, ROOT, MPI_COMM_WORLD);
 
-      printf("ROOT.- Vector desordenado ya enviado. Ordenando...\n");
+      printf("* %u.- Vector desordenado ya enviado. Ordenando...\n", myrank);
       scomplex* fft_parc = (scomplex*) malloc((n/np_total)*sizeof(scomplex));
       ordenar_bit_reversal_parcial(senal, fft_parc, n, np_total, myrank);
-      printf("\nROOT.- Vector parcial ordenado. Esperando demas vectores...\n");
+      printf("* %u.- Vector parcial ordenado. Esperando demas vectores...\n",myrank);
       MPI_Gather(fft_parc, bloque, complex_MPI, fft_res, bloque, complex_MPI, ROOT, MPI_COMM_WORLD);  
-      printf("ROOT.- Vectores recibidos y agrupados. Orden listo.\n");
+      printf("* %u.- Vectores recibidos y agrupados. Orden listo.\n",myrank);
     }else{ /* El ROOT es el único uP. */
       dft(senal+semi_n, semi_n, 2, 0, semi_n);  
       free(twiddle_factors);
-      printf("ROOT.- Calculada FFT. Ordenando...\n");
+      printf("* %u.- Calculada FFT. Ordenando...\n",myrank);
       ordenar_bit_reversal_parcial(senal, fft_res, n, 1, 0);
-      printf("ROOT.- Orden listo.\n");
+      printf("* %u.- Orden listo.\n");
     }
   }else{
     /**** Procesos NO ROOT. ****/

@@ -25,10 +25,13 @@ clean:
 	rm -f *.o *~ fft *.out
 
 cleana:
-	rm -f *.o *~ fft *.out *.txt
+	rm -f *.o *~ fft *.out *.txt gener
 
 run:
 	mpirun -np 2 ./fft
+
+gener: ./gen/generador.c
+	gcc ./gen/generador.c -ogener
 
 all:
 	make clean
