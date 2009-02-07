@@ -62,14 +62,14 @@ int main(int argc, char *argv[]){
   modular(senial, cant, fs, fm);
   //printf("fm=%f.\n", fm);
 
-  printf("Dm=%c fs=%1.1f f=%1.1f cnt=%uK dc=%1.1f ns=%1.1f mod=%1.1f.\n", dominio,fs,f,cant/1024,dc,noise,fm);
+  printf("Dm=%c fs=%1.1f f=%1.1f cnt=%u(%uK) dc=%1.1f ns=%1.1f mod=%1.1f.\n", dominio,fs,f,cant,cant/1024,dc,noise,fm);
 
   printf("*** Guardando archivo...\n");
   escribir_archivo_t("entrada.txt", senial, cant, fs);
   
 
   free(senial);
-  printf("Fin.!\n");
+  printf("Fin!!!\n");
   return 0;
 }
 

@@ -159,6 +159,19 @@ void escribir_archivo_mf(char* nombre, scomplex vector[], uint n, float fs){
   fclose (fp);
 }
 
+
+void escribir_archivo_f(char *nombre, scomplex vector[], uint n, float fs){
+  uint i;
+  FILE *fp = abrir_archivo_out(nombre);
+  printf("Escribiendo archivo FFT...\n");
+
+  for (i=0;i<n;i++)
+    fprintf(fp, "%f + %fj \n", vector[i].re,vector[i].im);
+  
+  fclose (fp);
+}
+
+/*
 void escribir_archivo_f(char *nombre, scomplex vector[], uint n, float fs){
   uint i;
   FILE *fp = abrir_archivo_out(nombre);
@@ -172,4 +185,4 @@ void escribir_archivo_f(char *nombre, scomplex vector[], uint n, float fs){
   
   fclose (fp);
 }
-
+*/

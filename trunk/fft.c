@@ -80,7 +80,7 @@ void fft(scomplex *senal,scomplex *fft_res, uint n,uint nproc){
       free(twiddle_factors);
       printf("* %u.- Calculada FFT. Ordenando...\n",myrank);
       ordenar_bit_reversal_parcial(senal, fft_res, n, 1, 0);
-      printf("* %u.- Orden listo.\n");
+      printf("* %u.- Orden listo.\n",myrank);
     }
   }else{
     /**** Procesos NO ROOT. ****/
