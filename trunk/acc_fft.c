@@ -15,7 +15,7 @@ uint responsab(uint posic){
   uint bloque_por_uP = (uint)(nro_muestras_total/np_total);
   
   myrank = posic / bloque_por_uP;
-  printf("   Solicitada resp. (posic=%u -> resp=%u).\n",posic,myrank);
+  //printf("   Solicitada resp. (posic=%u -> resp=%u).\n",posic,myrank);
   return myrank;
 }
 
