@@ -151,6 +151,9 @@ void escribir_archivo_mf(char* nombre, scomplex vector[], uint n, float fs){
   FILE *fp = abrir_archivo_out(nombre);
   printf("Escribiendo archivo con mod(FFT)...\n");
 
+  fprintf(fp, "%u\n", n); // Escribe la long. del vector.
+  fprintf(fp, "%f\n", fs);// Escribe la fs.
+
   for (i=n/2;i<n;i++)
     fprintf(fp, FORMATO_EN_ARCHIVO_MODFFT, ((float)(i-n/2)/n - 0.5)*fs, sqrt(pow(vector[i].re, 2.0) + pow(vector[i].im, 2.0)));
   for (i=0;i<(n/2);i++)
@@ -163,6 +166,9 @@ void escribir_archivo_f(char *nombre, scomplex vector[], uint n, float fs){
   uint i;
   FILE *fp = abrir_archivo_out(nombre);
   printf("Escribiendo archivo FFT...\n");
+
+  fprintf(fp, "%u\n", n); // Escribe la long. del vector.
+  fprintf(fp, "%f\n", fs);// Escribe la fs.
 
   for (i=n/2;i<n;i++)
     fprintf(fp, FORMATO_EN_ARCHIVO_FFT, ((float)(i-n/2)/n - 0.5)*fs, vector[i].re,vector[i].im);

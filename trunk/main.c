@@ -28,23 +28,18 @@ int main(int argc, char *argv[]){
   if (myrank == ROOT){
 
     /*    
-    // UTILIZADO PARA GENERAR VECTOR DE GRAN VOLUMEN DE MUESTRAS.
+    // UTILIZADO PARA GENERAR VECTOR DE GRAN CANTIDAD DE MUESTRAS.
     // OMITE EL ARCHIVO DE POR MEDIO.    
     float f=770.0; n=1*32*32*1024; fs=10000; 
     senal = (scomplex*) malloc(n*sizeof(scomplex));          
     generar_coseno(senal,n,fs,f);
     */
 
-    /*
-    generar_archivo(); // Borrar esto.
-    printf("ROOT.- Abriendo archivo...\n");            
-    */
-
     if (argc>1){
-      printf("* %u.- Leyendo entrada de %s.\n",myrank, argv[1]);
+      printf("* %u.- Leyendo entrada de '%s'.\n",myrank, argv[1]);
       abrir_archivo_t(argv[1], &senal, &n, &fs);     
     }else{
-      printf("* %u.- Leyendo entrada de entrada.txt.\n",myrank);
+      printf("* %u.- Leyendo entrada por defecto de 'entrada.txt'.\n",myrank);
       abrir_archivo_t("entrada.txt", &senal, &n, &fs);     
     }
 
@@ -64,14 +59,18 @@ int main(int argc, char *argv[]){
     imprimir_maximo_modulo(fft_res, n, fs);
     
     if (argc>2){  
-      printf("* %u.- Escribiendo FFT en %s.\n",myrank, argv[2]);
+      printf("* %u.- Escribiendo FFT en '%s'.\n",myrank, argv[2]);
       escribir_archivo_f(argv[2], fft_res, n, fs);
+    }else{
+      printf("* %u.- Escribiendo FFT en 'fft.txt' por defecto.\n",myrank);
+      escribir_archivo_f("fft.txt", fft_res, n, fs);
     }
 
     if (argc>3){    
       printf("* %u.- Escribiendo |FFT| en %s.\n",myrank, argv[3]);
       escribir_archivo_mf(argv[3], fft_res, n, fs);
     }
+
     free(fft_res);
   }
     
