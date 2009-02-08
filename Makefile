@@ -28,7 +28,8 @@ cleana:
 	rm -f *.o *~ fft *.out *.txt gener
 
 run:
-	mpirun -np 2 ./fft
+	echo "mpirun -np 2 ./fft"
+	./fft entrada.txt fft.txt fftm.txt
 
 gener: ./gen/generador.c
 	gcc ./gen/generador.c -ogener
