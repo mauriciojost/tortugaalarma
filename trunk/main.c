@@ -59,6 +59,8 @@ int main(int argc, char *argv[]){
     tiempo = clock() - tiempo;
     printf("* %u.- Listo! FFT tardo %f segundos (CLOCKS_PER_SEC=%u).\n",myrank,(double)tiempo/(double)CLOCKS_PER_SEC,(uint)CLOCKS_PER_SEC);
     free(senal);    
+    
+    
     imprimir_maximo_modulo(fft_res, n, fs);
     
     if (argc>2){  

@@ -37,7 +37,7 @@ void fft(scomplex *senal,scomplex *fft_res, uint n,uint nproc){
   for (i=0;i<(n>>1);i++){
     arg = PI2*i/n;
 	  twiddle_factors[i].re = cos((double)arg);
-	  twiddle_factors[i].im = sin((double)arg);
+	  twiddle_factors[i].im = -sin((double)arg);
   }
 
   /* Creación de un nuevo tipo MPI. 1 Complejo. */
@@ -78,8 +78,16 @@ void fft(scomplex *senal,scomplex *fft_res, uint n,uint nproc){
     }else{ /* El ROOT es el único uP. */
       dft(senal+semi_n, semi_n, 2, 0, semi_n);  
       free(twiddle_factors);
+
+      //printf("Des-Ordenado.\n");
+      //imprimir_vector_complejo(senal, n);
+
       printf("* %u.- Calculada FFT. Ordenando...\n",myrank);
       ordenar_bit_reversal_parcial(senal, fft_res, n, 1, 0);
+
+      //printf("Ordenado.\n");
+      //imprimir_vector_complejo(fft_res, n);
+
       printf("* %u.- Orden listo.\n",myrank);
     }
   }else{
