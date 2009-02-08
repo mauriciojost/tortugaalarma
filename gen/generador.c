@@ -28,7 +28,7 @@ int main(int argc, char *argv[]){
     sscanf(argv[3],"%f",&f);
     //printf("Frecuencias f=%f (argv[3]='%s').\n",f ,argv[3]);
     sscanf(argv[4],"%u",&cant);
-    //cant = 1024 * cant;
+    cant = 1024 * cant;
     //printf("Cantidad=%u  (argv[4]='%s').\n",cant,argv[4]);
   }
 
