@@ -8,6 +8,9 @@
 #include "acc_fft.h"
 
 #define ROOT 0
+// Quitar comentarios en esta línea para veificar tiempos con n muy grandes.
+//#define VECTOR_DIRECTAMENTE_EN_MEMORIA
+
 
 int main(int argc, char *argv[]){
   float fs;
@@ -26,15 +29,15 @@ int main(int argc, char *argv[]){
 
   MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
   if (myrank == ROOT){
-
-    /*    
+    printf("\nModo de uso: %s <senal_entrada>.txt <fft_salida>.txt <modfft_salida>.txt\n\n", argv[0]);
+#ifdef VECTOR_DIRECTAMENTE_EN_MEMORIA  
     // UTILIZADO PARA GENERAR VECTOR DE GRAN CANTIDAD DE MUESTRAS.
     // OMITE EL ARCHIVO DE POR MEDIO.    
-    float f=770.0; n=1*32*32*1024; fs=10000; 
+    float f=770.7; n=16*1024*1024; fs=10000; 
+    printf("* %u.- Cargando vector de muestras directamente en memoria...\n", myrank);
     senal = (scomplex*) malloc(n*sizeof(scomplex));          
     generar_coseno(senal,n,fs,f);
-    */
-
+#else
     if (argc>1){
       printf("* %u.- Leyendo entrada de '%s'.\n",myrank, argv[1]);
       abrir_archivo_t(argv[1], &senal, &n, &fs);     
@@ -42,7 +45,7 @@ int main(int argc, char *argv[]){
       printf("* %u.- Leyendo entrada por defecto de 'entrada.txt'.\n",myrank);
       abrir_archivo_t("entrada.txt", &senal, &n, &fs);     
     }
-
+#endif
     printf("* %u.- Iniciado el procesamiento de FFT (%d muestras).\n", myrank, n);
     tiempo = clock();  
     fft_res = (scomplex*) malloc(n*sizeof(scomplex));
@@ -58,6 +61,7 @@ int main(int argc, char *argv[]){
     
     imprimir_maximo_modulo(fft_res, n, fs);
     
+#ifndef VECTOR_DIRECTAMENTE_EN_MEMORIA  
     if (argc>2){  
       printf("* %u.- Escribiendo FFT en '%s'.\n",myrank, argv[2]);
       escribir_archivo_f(argv[2], fft_res, n, fs);
@@ -70,6 +74,7 @@ int main(int argc, char *argv[]){
       printf("* %u.- Escribiendo |FFT| en %s.\n",myrank, argv[3]);
       escribir_archivo_mf(argv[3], fft_res, n, fs);
     }
+#endif
 
     free(fft_res);
   }
