@@ -31,10 +31,10 @@ function [w vector] = leer_archivo_t(fname)
 
     vector(i) = real + j* imaginario;
   endfor
-
+  hold off;
   t = linspace(0, len/fs, len);
   plot(t, vector);
-  hold on;  fclose(fd);
+  fclose(fd);
 
   fprintf('Archivo leido.\n');
 endfunction

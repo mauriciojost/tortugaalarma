@@ -1,0 +1,10 @@
+archivo = '/home/mauri/misdoc/fftf/svn/trunk/entrada.txt';
+archivofft = '/home/mauri/misdoc/fftf/svn/trunk/fft.txt';
+cd /home/mauri/misdoc/fftf/svn/matlab/;
+disp('Mostrar que la FFT funciona, controlando con Octave.');
+disp('Generar un archivo con Octave (creexp3 y crecos3) y aplicar mossespec y ./fft.');
+disp('Comprobar resultados (usar comando figure para separarlos).');
+disp(' ');
+disp('Luego ver los tiempos del algoritmo.');
+disp('');
+disp('Luego ver las respuestas para cada tipo de efecto en la señal (dc, rnd, etc.).');

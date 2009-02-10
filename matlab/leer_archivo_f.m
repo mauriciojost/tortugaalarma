@@ -30,7 +30,7 @@ function [w vector] = leer_archivo_f(fname)
     w(i) = freq;
     %fprintf('freq=%f.\n', freq);
   endfor
-
+  hold off
   plot(w, abs(vector));  fclose(fd);
 
   fprintf('Archivo leido.\n');
