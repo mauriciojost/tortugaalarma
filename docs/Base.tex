@@ -11,9 +11,11 @@
 \usepackage[T1]{fontenc}                    % Tipo de codificación del documento.
 \usepackage{booktabs}                       % No recuerdo.
 \usepackage{tabulary}                       % Tablas.
+\usepackage{float}
 
 % Facilitar guionado a LaTex. Manifestación explícita de reglas.
-\hyphenation{si-guien-do ar-qui-tec-tu-ras reali-zan gra-nu-la-ri-dad reali-zar Reversal Bit su-pe-rior sub-blo-que}
+\hyphenation{si-guien-do ar-qui-tec-tu-ras reali-zan gra-nu-la-ri-dad reali-zar Reversal Bit su-pe-rior sub-blo-que pa-ra-le-li-za-ción}
+\sloppy % Indica que en lo posible hay que reducir el guionado (LaTex no lo hace muy bien).
 
 %avant, avantgar, bookman, chancery, charter, courier, helvet, helvetic, ncntrsbk, newcent, palatcm, palatino, pifont, %times, utopia, zapfchan. Modo de uso: \usepackage{avant}, etc.
 
@@ -56,10 +58,12 @@ Trabajo Práctico Final\\
 \begin{Large}Sistemas Operativos II\\\end{Large}
 \bigskip\bigskip
 
-\begin{figure}[htp]
-\centering
+\begin{figure}[H]
+\begin{center}
 \includegraphics[scale=0.4]{UNC.jpg}
+\end{center}
 \end{figure}
+
 
 \begin{normalsize}
 Facultad de Ciencias Exactas, Físicas y Naturales\\
@@ -76,32 +80,34 @@ UNC
 \end{center}
 \newpage                                                    % Nueva página.
 
+
+% Contenidos (o índice).
+\tableofcontents
+\newpage
+
+
 % Estilo de cabeceras para el resto del documento.
 \fancypagestyle{plain}
 {
     \fancyhf{}
     \fancyhead[R]{\bfseries \rightmark}
-    \fancyhead[LE]{\bfseries \leftmark}
+    \fancyhead[L]{\bfseries \leftmark}
 %    \fancyhead[LO]{\ECFTeenSpirit Jost}         %Encabezado
-    \fancyhead[LO]{Jost}         %Encabezado
-    \fancyfoot[C]{\bfseries \thepage}       %Pie de página
+    \fancyfoot[L]{M. Jost}         %Encabezado
+    \fancyfoot[R]{\bfseries \thepage}       %Pie de página
 
     \renewcommand{\headrulewidth}{1pt}      %Linea en el encabezado
     \renewcommand{\footrulewidth}{1pt}      %Linea en el pie de pagina.
 }
 \pagestyle{plain}
 
-% Contenidos (o índice).
-\tableofcontents
-\newpage
-
 \setcounter{page}{1}                        % Establece la página actual como nro. 1.
 
 \section{Introducción}
 
 Los algoritmos de FFT son múltiples, y existen tantos como cantidad
-de arquitecturas de computadoras. El presente trabajo pretende realizar la implementación
-del mismo, pero no haciendo hincapié en recursos específicos de determinada
+de arquitecturas de computadoras. El presente trabajo pretende mostrar una implementación sencilla,
+pero no haciendo hincapié en recursos específicos de determinada
 arquitectura, sino en características más bien generales, presentes en casi todos los
 sistemas multiprocesadores de la actualidad.
 
@@ -129,6 +135,66 @@ Transformada Discreta de Fourier (DFT). Genera el mismo resultado que se obtiene
 La FFT puede definirse como un reajuste matemático de la DFT para una obtención del mismo
 resultado a través de menos operaciones matemáticas, y por ello menos tiempo computacional.
 
+
+\subsection{Fundamentos de FFT}
+Para el procesamiento de N muestras $x_{(n)}$ (N debe ser potencia de 2), se tiene
+la siguiente ecuación para la obtención de su DFT:
+
+\begin{equation}
+\label{E:DFT}
+	X_{(k)} = \sum_{n=0}^{N-1} x_{(n)} e^{-\frac{j2\pi}{N}} \quad , \quad 0\leq k\leq{N-1}
+\end{equation}
+El factor
+\begin{equation}
+	e^{-\frac{j2\pi}{N}} = \omega_N^{kn}
+\end{equation}
+es llamado \textit{phase factor} o también \textit{twiddle factor}.
+
+Este factor presenta periodicidad, y cierta simetría que no es aprovechada por DFT, pero sí por FFT.
+\begin{itemize}
+\item Propiedad de simetría: $\omega_N^{k+N/2} = -\omega_N^{k}$
+\item Propiedad de periodicidad: $\omega_N^{k+N} = \omega_N^{k}$
+\end{itemize}
+Este hecho permite que la cantidad total de multiplicaciones y sumas necesarias para el resultado final, disminuya.
+
+Como consecuencia de la utilización de estas propiedades, se obtiene que la Ecuación \ref{E:DFT}
+pueda expresarse (definida por partes) de la siguiente manera:
+
+\begin{equation}
+\label{E:FFT1}
+    X_{(2k)} = \sum_{n=0}^{\frac{N}{2}-1}[x_{(n)} + x_{(n+\frac{N}{2})}], \quad k=0,1,\dots,\frac{N}{2}-1
+\end{equation}
+\begin{equation}
+\label{E:FFT2}
+    X_{(2k+1)} = \sum_{n=0}^{\frac{N}{2}-1}[x_{(n)} - x_{(n+\frac{N}{2})}], \quad k=0,1,\dots,\frac{N}{2}-1
+\end{equation}
+
+La aplicación de las Ecuaciones \ref{E:FFT1} y \ref{E:FFT2} a un conjunto de muestras $x_{(n)}$ está representada en la Figura \ref{F:Etapas}. El proceso entero requiere $\log_2{N}$ etapas de diezmado (DFT).
+
+\bigskip
+\begin{figure}[H]
+\begin{center}
+\includegraphics[scale=0.50]{etapas.jpg}
+\caption{\small Etapas de la FFT ($N=8$).}
+\label{F:Etapas}
+\end{center}
+\end{figure}
+\bigskip
+
+Cada una de las etapas involucra $\frac{N}{2}$ mariposas del tipo mostrado en la Figura (\ref{F:Mariposa}).
+
+\bigskip
+\begin{figure}[H]
+\begin{center}
+\includegraphics[scale=0.55]{mariposa.jpg}
+\caption{\small Mariposa para diezmado en frecuencia. Constituye el bloque básico para el algoritmo de FFT.}
+\label{F:Mariposa}
+\end{center}
+\end{figure}
+\bigskip
+
+\section{Implementación}
+
 \subsection{Enfoque del diseño del algoritmo}
 
 Si bien el volumen de procesamiento involucrado para obtener la DFT se reduce con el algoritmo
@@ -141,76 +207,14 @@ como Verilog o VHDL.
 No es intención del autor lograr la máxima eficiencia para un sistema dado, sino lograr un
 algoritmo que tenga buena respuesta general, en cualquier sistema multiprocesador moderno.
 
-\subsection{Implementación de FFT}
-Para el procesamiento de N muestras $x_{(n)}$ (N debe ser potencia de 2), se tiene
-la siguiente ecuación para la obtención de su DFT:
-
-\begin{equation}
-\label{E:DFT}
-	X_{(k)} = \sum_{n=0}^{N-1} x_{(n)} e^{-\frac{j2\pi}{N}} \quad , \quad 0\leq k\leq{N-1}
-\end{equation}
-El factor
-\begin{equation}
-	e^{-\frac{j2\pi}{N}} = \omega_N^{kn}
-\end{equation}
-es llamado \textit{phase factor}.
-Este factor presenta periodicidad, y cierta simetría que no es aprovechada por DFT, pero sí por FFT.
-\begin{itemize}
-\item Propiedad de simetría: $\omega_N^{k+N/2} = -\omega_N^{k}$
-\item Propiedad de periodicidad: $\omega_N^{k+N} = \omega_N^{k}$
-\end{itemize}
-Este hecho permite que la cantidad total de multiplicaciones y sumas necesarias para el resultado final, disminuya.
-
-Como consecuencia final de la utilización de estas propiedades, se obtiene que la Ecuación \ref{E:DFT}
-pueda expresarse (definida por partes) de la siguiente manera:
-
-\begin{equation}
-\label{E:FFT1}
-    X_{(2k)} = \sum_{n=0}^{\frac{N}{2}-1}[x_{(n)} + x_{(n+\frac{N}{2})}], \quad k=0,1,\dots,\frac{N}{2}-1
-\end{equation}
-\begin{equation}
-\label{E:FFT2}
-    X_{(2k+1)} = \sum_{n=0}^{\frac{N}{2}-1}[x_{(n)} - x_{(n+\frac{N}{2})}], \quad k=0,1,\dots,\frac{N}{2}-1
-\end{equation}
-
-La aplicación de estas ecuaciones a un conjunto de muestras $x_{(n)}$ está representado en la Figura \ref{F:Etapas}. El proceso entero requiere $\log_2{N}$ etapas de diezmado (DFT).
-
-La siguiente Figura describe el sentido práctico de las ecuaciones \ref{E:FFT1} y \ref{E:FFT2}.
-
-\bigskip
-\begin{figure}[htp]
-\centering
-\includegraphics[scale=0.45]{etapas.jpg}
-\centering
-\caption{
-\small
-Etapas de la FFT ($N=8$).
-}
-\label{F:Etapas}
-\end{figure}
-\bigskip
-
-Cada una de las etapas involucra $\frac{N}{2}$ mariposas del tipo mostrado en la Figura (\ref{F:Mariposa}).
-
-\bigskip
-\begin{figure}[htp]
-\centering
-\includegraphics[scale=0.50]{mariposa.jpg}
-\caption{
-\small
-Mariposa para diezmado en frecuencia. Constituye el bloque básico para el algoritmo de FFT.}
-\label{F:Mariposa}
-\end{figure}
-\bigskip
-
 \subsection{Recursividad}
 El algoritmo puede ser llevado a una forma recursiva. Así, en cada etapa, se realizan dos llamadas a la misma función
 de origen. Esta forma de escribir el algoritmo facilita mucho su abordaje conceptual.
 
 \bigskip
-\begin{figure}[htp]
+\begin{figure}[H]
 \centering
-\includegraphics[scale=0.65]{recursividad.jpg}
+\includegraphics[scale=0.55]{recursividad.jpg}
 \caption{
 \small
 Recursividad de FFT con diezmado en frecuencia. Ejemplo con vector de 8 muestras.}
@@ -219,9 +223,8 @@ Recursividad de FFT con diezmado en frecuencia. Ejemplo con vector de 8 muestras
 \bigskip
 
 Existen muchas implementaciones escritas en base a bucles, en búsqueda de eficiencia. Por desgracia estas son un tanto más difíciles de desglosar, y su paralelización requiere de un cuidado extremo. En el corriente trabajo se ha optado por algoritmos recursivos, que permiten divisar fácilmente la esencia de la idea sobre la cual fueron construidos.
-En la Figura \ref{F:Recursividad} se puede observar el conjunto de llamadas a una función recursiva DFT.
 
-Notar que en cada etapa se produce una bifurcación de los datos a nivel de dependencias entre ellos. Esto se ha utilizado para generar paralelismo de grano grueso de sincronización. También es importante destacar que una vez logrado el último nivel de recursividad, los datos requieren de un ordenamiento especial antes de ser reagrupados.
+En la Figura \ref{F:Recursividad} se puede observar el conjunto de llamadas a una función recursiva DFT, y su forma de árbol. Notar que en cada etapa se produce una bifurcación de los datos a nivel de dependencias entre ellos. Esto se ha utilizado para generar paralelismo de grano grueso de sincronización. También es importante destacar que una vez logrado el último nivel de recursividad, los datos requieren de un ordenamiento especial antes de ser reagrupados.
 
 \subsection{Paralelismo}
 
@@ -231,15 +234,15 @@ Sin embargo, antes de la bifurcación, no es sencillo lograr procesamiento parale
 
 \subsubsection{Etapas de DFT con Paralelismo}
 
-En este trabajo se ha optado por buscar la eficiencia desde la simpleza y la casi nula sobrecarga de sincronización. Esto implica que el algoritmo no es capaz de distribuir el trabajo entre una cantidad arbitraria de procesadores, sino únicamente para una cantidad $N_p$ donde $N_p = 2^v$ con $v$ entero (en otras palabras, $N_p$ debe ser potencia de 2). De esta forma, se puede distribuir los trabajos sin una sobrecarga considerable, y hacer que cada tarea tenga un grado de dependencia muy bajo respecto de su tarea par, aquella que surgió de la misma bifurcación. También se logra un
-balance de carga que mejora con el aumento de la cantidad de muestras. Esto puede apreciarse en la Figura \ref{F:balance_ejemplo}, presente en las secciones siguientes.
+En este trabajo se ha optado por buscar la eficiencia desde la simpleza y la casi nula sobrecarga de sincronización. Esto implica que el algoritmo no es capaz de distribuir el trabajo entre una cantidad arbitraria de procesadores, sino únicamente para una cantidad $N_p$ donde $N_p = 2^v$ con $v$ entero (en otras palabras, $N_p$ debe ser potencia de 2). De esta forma, se pueden distribuir los trabajos sin una sobrecarga considerable, y hacer que cada tarea tenga un grado de dependencia muy bajo respecto de su tarea par, aquella que surgió de la misma bifurcación. También se logra un
+balance de carga que mejora con el aumento de la cantidad de muestras (Figura \ref{F:balance_ejemplo}).
 
 En la Figura \ref{F:Etapas} se puede ver que es necesario luego de la última etapa de DFT, realizar un reordenamiento de los datos antes de presentarlos. El método que permite obtener la secuencia de índices es el \textit{Bit Reversal}. El ordenamiento en sí, puede consumir un tiempo importante, y es por ello que se ha optado por paralelizar también su ejecución.
 
 \subsubsection{\textit{Bit Reversal} con Paralelismo}
 
 El método utilizado para lograr una ejecución más rápida del algoritmo de ordenamiento es sencillo. Consiste en
-agrupar los datos desordenados (u ordenados de una forma no útil) luego de todas las etapas de DFT, y volver a distribuirlos para que cada procesador reordene una parte determinada del bloque final.
+agrupar los datos procesador y desordenados (u ordenados de una forma no útil) luego de todas las etapas de DFT, y redistribuirlos, para que cada procesador reordene una parte determinada del bloque final.
 Cada procesador tomará datos de todo el conjunto desordenado, según su propio cálculo de \textit{Bit Reversal},
 y los agrupará en un bloque que, agrupado de forma contigua con el resto de los bloques procesados por el resto
 de los procesadores, resultará en el bloque final con el orden deseado.
@@ -270,33 +273,35 @@ $B_{inicio}$ es el punto inicial del bloque.\\
 $N_P$ es la cantidad de procesos.\\
 $N_M$ es la longitud de la muestra (en coeficientes).\\
 
-La siguiente Figura muestra un ejemplo.
+La Figura \ref{F:balance_ejemplo} muestra un ejemplo.
 
 \bigskip
-\begin{figure}[htp]
+\begin{figure}[H]
 \centering
-\includegraphics[scale=0.65]{balance_16_4_.jpg}
-\centering
+\includegraphics[scale=0.60]{balance_16_4_.jpg}
 \caption{
 \small
 Ejemplo de balance de carga para el caso de $N_p=4$ y  $N_{muestras}=16$. Con
-color más oscuro se pueden observar las asignaciones al proceso \textit{root}.
-Cada círculo representa un dato calculado por el procesador indicado.}
+tono más oscuro se pueden observar las asignaciones al proceso \textit{root}.
+Cada círculo representa un dato calculado por el procesador indicado.
+En este caso la \textit{unidad mínima de distribución de trabajo} es $\frac{N_{muestras}}{N_p} = 4$.
+}
 \label{F:balance_ejemplo}
 \end{figure}
 \bigskip
 
 Nótese en la Figura \ref{F:balance_ejemplo} que el algoritmo es imparcial al inicio.
 A medida que se avanza en las etapas la carga es mejor balanceada.
-Al momento de alcanzar la unidad mínima de distribución de trabajo ($\frac{N_{muestras}}{N_p} = 4$ para el ejemplo)
-el trabajo deja de distribuirse, y cada procesador continua con la totalidad de las DFT asociadas al sub-bloque, y a sus sub-bloques.
+Al momento de alcanzar la \textit{unidad mínima de distribución}, el trabajo deja de distribuirse, y cada procesador continua con la totalidad de las DFT asociadas al sub-bloque, y a sus sub-bloques.
+
+En la etapa de ordenamiento \textit{Bit Reversal}, la totalidad de los datos son repartidos a cada procesador. Cada uno de ellos utiliza ciertos elementos del vector desordenado, para generar un bloque de lo que será el vector final.
 
 
 \section{Mediciones}
-Las mediciones tomadas muestran tiempos en [Seg\footnote{\textit{Seg.} es la unidad entregada por la función ANSI C \textit{clock\_t clock()} dividida entre \textit{CLOCKS\_PER\_SEC}. Es usada a los efectos de establecer comparaciones entre dos algoritmos, y no se pretende con ella sugerir tiempos absolutos de ejecución.}] para diferentes tamaños de vector, y para diferente cantidad de procesadores.
+Las mediciones tomadas muestran tiempos en [Seg*\footnote{\textit{Seg*} es la unidad de referencia utilizada. Resulta del retorno de la función ANSI C \textit{clock\_t clock()} dividido entre \textit{CLOCKS\_PER\_SEC}. Es usada a los efectos de establecer comparaciones entre dos algoritmos, y no se pretende con ella sugerir tiempos absolutos de ejecución.}] para diferentes tamaños de vector, y para diferente cantidad de procesadores.
 El sistema utilizado para todos los casos es una PC Notebook HP530, CoreDuo 1.66 GHz, 2GiB RAM, SO Fedora 10.
 
-\begin{table}[htp]
+\begin{table}[H]
 \centering
 \begin{center}
   \scriptsize
@@ -314,14 +319,14 @@ El sistema utilizado para todos los casos es una PC Notebook HP530, CoreDuo 1.66
 \label{T:Tabla_mediciones}
 \end{table}
 
-La aparentemente inexplicable medición obtenida para 2uP y 64Mi muestras, es causada por falta de memoria principal. Para ciertas etapas del algoritmo, cada proceso requiere volúmenes grandes de memoria (por ejemplo al hacer \textit{bit reversal}). No disponer de esa memoria implica la utilización de memoria de intercambio (memoria secundaria), y por ende aumentos imprevistos de tiempo de ejecución.
+La aparentemente inexplicable medición obtenida para 2uP y 64Mi muestras, es causada por falta de memoria principal. Para ciertas etapas del algoritmo, cada proceso requiere volúmenes grandes de memoria (por ejemplo al hacer \textit{Bit Reversal}). No disponer de esa memoria implica la utilización de memoria de intercambio (memoria secundaria), y por ende aumentos imprevistos de tiempo de ejecución.
 
-La Figuras \ref{F:mediciones1} y \ref{F:mediciones2} muestran estos resultados. 
+La Figuras \ref{F:mediciones1} y \ref{F:mediciones2} muestran estos resultados.
 
 Las Figuras \ref{F:medicionesrelacion1} y \ref{F:medicionesrelacion2} expresan la relación entre resultados para 1 y 2 procesadores.
 
 \bigskip
-\begin{figure}[htp]
+\begin{figure}[H]
 \centering
 \includegraphics[scale=0.3]{fftfig1.jpg}
 \caption{
@@ -332,7 +337,7 @@ Mediciones de la FFT con paralelismo.}
 \bigskip
 
 \bigskip
-\begin{figure}[htp]
+\begin{figure}[H]
 \centering
 \includegraphics[scale=0.3]{fftfig2.jpg}
 \caption{
@@ -343,7 +348,7 @@ Mediciones de la FFT con paralelismo. Para una cantidad de muestras pequeña, las
 \bigskip
 
 \bigskip
-\begin{figure}[htp]
+\begin{figure}[H]
 \centering
 \includegraphics[scale=0.3]{relacion1.jpg}
 \caption{
@@ -355,7 +360,7 @@ Relación entre mediciones de la FFT con paralelismo sobre 1 y 2 procesadores.}
 
 
 \bigskip
-\begin{figure}[htp]
+\begin{figure}[H]
 \centering
 \includegraphics[scale=0.3]{relacion2.jpg}
 \caption{
@@ -366,7 +371,7 @@ Relación entre mediciones de la FFT con paralelismo sobre 1 y 2 procesadores. Ve
 \bigskip
 \newpage
 
-
+\clearpage
 % Bibliografía.
 \begin{thebibliography}{9}
 
